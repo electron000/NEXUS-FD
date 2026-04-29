@@ -20,6 +20,7 @@ import {
   Zap,
   CheckCircle2,
 } from "lucide-react";
+import Link from "next/link";
 
 import { HeroLogo } from "@/components/ui/HeroLogo";
 
@@ -414,14 +415,20 @@ function Hero() {
           animate="visible"
           className="flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-4"
         >
-          <button className="w-full sm:w-auto group flex justify-center items-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 font-mono text-sm font-semibold text-white shadow-[0_0_30px_-5px_rgba(59,130,246,0.4)] transition-all duration-300 hover:bg-blue-500 hover:shadow-[0_0_40px_-5px_rgba(59,130,246,0.55)]">
+          <Link
+            href="/register"
+            className="w-full sm:w-auto group flex justify-center items-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 font-mono text-sm font-semibold text-white shadow-[0_0_30px_-5px_rgba(59,130,246,0.4)] transition-all duration-300 hover:bg-blue-500 hover:shadow-[0_0_40px_-5px_rgba(59,130,246,0.55)]"
+          >
             Start Auditing
             <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-          </button>
-          <button className="w-full sm:w-auto flex justify-center items-center gap-2 rounded-xl border border-zinc-700/60 px-6 py-3.5 font-mono text-sm font-semibold text-zinc-300 transition-all duration-200 hover:border-zinc-500 hover:text-white">
+          </Link>
+          <Link
+            href="/terminal"
+            className="w-full sm:w-auto flex justify-center items-center gap-2 rounded-xl border border-zinc-700/60 px-6 py-3.5 font-mono text-sm font-semibold text-zinc-300 transition-all duration-200 hover:border-zinc-500 hover:text-white"
+          >
             <Activity className="h-4 w-4 text-blue-500" />
             View Live Demo
-          </button>
+          </Link>
         </motion.div>
 
         <TerminalMockup />
