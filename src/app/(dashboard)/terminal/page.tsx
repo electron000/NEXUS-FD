@@ -40,7 +40,7 @@ function sanitizeDomain(raw: string): string {
 function ResultSkeleton() {
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[0, 1, 2].map((i) => (
           <Card key={i}>
             <CardContent className="flex flex-col items-center py-6 gap-3">
@@ -167,8 +167,10 @@ function ResultsPanel({ data }: { data: DomainValuationResponse }) {
         <CardHeader>
           <CardTitle>Registrar Arbitrage</CardTitle>
         </CardHeader>
-        <CardContent className="pt-1">
-          <ArbitrageTable data={data.pricing} />
+        <CardContent className="pt-1 overflow-x-auto">
+          <div className="min-w-[520px]">
+            <ArbitrageTable data={data.pricing} />
+          </div>
         </CardContent>
       </Card>
 

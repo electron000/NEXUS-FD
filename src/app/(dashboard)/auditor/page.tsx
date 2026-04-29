@@ -177,14 +177,14 @@ export default function AuditorPage() {
             className="space-y-4"
           >
             {/* Stats bar */}
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+              <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="positive">{rows.length} valuations generated</Badge>
                 {rawCount > rows.length && (
                   <Badge variant="default">{rawCount} rows total (capped at 50)</Badge>
                 )}
               </div>
-              <div className="ml-auto flex items-center gap-3">
+              <div className="sm:ml-auto flex flex-wrap items-center gap-3">
                 <span className="font-mono text-[10px] text-zinc-600">Avg. score:</span>
                 <span className="font-mono text-xs font-semibold text-white">
                   {Math.round(rows.reduce((a, r) => a + r.semanticScore, 0) / rows.length)}/100

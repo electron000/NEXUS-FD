@@ -6,7 +6,7 @@ import Link from "next/link";
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center bg-[#09090b] overflow-hidden">
+    <div className="relative flex min-h-screen flex-col items-center justify-center bg-[#09090b] overflow-hidden px-4 py-8">
       {/* Background grid */}
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.022]"
@@ -21,7 +21,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_40%_30%_at_50%_110%,rgba(6,182,212,0.06),transparent)]" />
 
       {/* Logo */}
-      <div className="relative z-10 mb-8 flex flex-col items-center gap-3">
+      <div className="relative z-10 mb-6 flex flex-col items-center gap-3">
         <Link href="/" className="flex items-center gap-3 group">
           <Image
             src="/nexus.webp"
@@ -40,8 +40,8 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       </div>
 
       {/* Auth card */}
-      <div className="relative z-10 w-full max-w-md px-4">
-        <div className="rounded-2xl border border-zinc-800/70 bg-zinc-950/90 p-8 shadow-[0_0_80px_-20px_rgba(59,130,246,0.2)] backdrop-blur-xl">
+      <div className="relative z-10 w-full max-w-md">
+        <div className="rounded-2xl border border-zinc-800/70 bg-zinc-950/90 p-6 sm:p-8 shadow-[0_0_80px_-20px_rgba(59,130,246,0.2)] backdrop-blur-xl">
           {children}
         </div>
       </div>

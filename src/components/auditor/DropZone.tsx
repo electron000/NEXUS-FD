@@ -87,7 +87,7 @@ export function DropZone({ onFileAccepted, isProcessing, rowCount, errorMessage 
       onDrop={handleDrop}
       onClick={() => state === "idle" && inputRef.current?.click()}
       className={cn(
-        "relative flex flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed p-12 transition-all duration-300 cursor-pointer select-none",
+        "relative flex flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed p-8 sm:p-12 transition-all duration-300 cursor-pointer select-none",
         borderClass,
         state !== "idle" && "cursor-default"
       )}

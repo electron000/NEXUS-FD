@@ -111,4 +111,9 @@
   .text-positive { color: var(--positive); }
   .text-negative { color: var(--negative); }
   .text-warning  { color: var(--warning); }
+
+  /* Safe-area bottom padding for mobile devices with home indicators */
+  .pb-safe {
+    padding-bottom: max(0px, env(safe-area-inset-bottom, 0px));
+  }
 }

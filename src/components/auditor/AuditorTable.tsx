@@ -149,7 +149,9 @@ export function AuditorTable({ data }: AuditorTableProps) {
 
   return (
     <div className="space-y-3">
-      <Table>
+      <div className="overflow-x-auto -mx-1">
+        <div className="min-w-[540px] px-1">
+          <Table>
         <TableHeader>
           {table.getHeaderGroups().map((hg) => (
             <TableRow key={hg.id} className="hover:bg-transparent border-zinc-800/60">
@@ -172,7 +174,9 @@ export function AuditorTable({ data }: AuditorTableProps) {
             </TableRow>
           ))}
         </TableBody>
-      </Table>
+        </Table>
+        </div>
+      </div>
 
       {/* Pagination */}
       {table.getPageCount() > 1 && (
