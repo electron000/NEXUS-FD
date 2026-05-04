@@ -19,7 +19,8 @@ export function ScoreGauge({
   color = "#3b82f6",
   size = 140,
 }: ScoreGaugeProps) {
-  const clampedValue = Math.min(100, Math.max(0, value));
+  const numericValue = typeof value === "number" && !isNaN(value) ? value : 0;
+  const clampedValue = Math.min(100, Math.max(0, numericValue));
   const pathRef = useRef<SVGPathElement>(null);
   const indicatorRef = useRef<SVGCircleElement>(null);
 

@@ -11,20 +11,17 @@ import {
 } from "@tanstack/react-table";
 import { useState } from "react";
 import { ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from "lucide-react";
-import type { AuditorRowData } from "@/services/mock";
 import {
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from "@/components/ui/table";
 import { GradeBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { AuditorResult } from "@/types";
 
-// ---------------------------------------------------------------------------
-// AuditorTable — High-density bulk results table
-// ---------------------------------------------------------------------------
 
 interface AuditorTableProps {
-  data: AuditorRowData[];
+  data: AuditorResult[];
 }
 
 function SortIcon({ sorted }: { sorted: false | "asc" | "desc" }) {
@@ -53,12 +50,30 @@ function SortableHeader({
   );
 }
 
-function ValuationBar({ value, max }: { value: number; max: number }) {
+function ValuationBar({ value, max, isLive, currency = "USD" }: { value: number; max: number; isLive?: boolean; currency?: string }) {
   const pct = Math.min(100, (value / max) * 100);
   const color = pct >= 66 ? "#22c55e" : pct >= 33 ? "#3b82f6" : "#f59e0b";
+  const symbol = currency === "INR" ? "₹" : "$";
   return (
     <div className="flex items-center gap-2 min-w-0">
-      <span className="font-mono text-xs text-white shrink-0">${value.toLocaleString()}</span>
+      <div className="flex flex-col">
+        <span className="font-mono text-xs text-white shrink-0">
+          {symbol}{value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </span>
+
+        {isLive && (
+          <span className="inline-flex items-center gap-1 mt-1">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+            </span>
+            <span className="text-[9px] font-mono font-bold text-emerald-400 uppercase tracking-wider leading-none">
+              Live Market Data
+            </span>
+          </span>
+        )}
+
+      </div>
       <div className="h-1 flex-1 rounded-full bg-zinc-800 min-w-8 max-w-24">
         <div
           className="h-full rounded-full transition-all duration-500"
@@ -69,16 +84,19 @@ function ValuationBar({ value, max }: { value: number; max: number }) {
   );
 }
 
+
 export function AuditorTable({ data }: AuditorTableProps) {
   const [sorting, setSorting] = useState<SortingState>([{ id: "simulatedValuation", desc: true }]);
 
   const maxVal = Math.max(...data.map(d => d.simulatedValuation), 1);
 
-  const columns: ColumnDef<AuditorRowData>[] = [
+  const columns: ColumnDef<AuditorResult>[] = [
+
     {
       id: "index",
       header: "#",
       cell: ({ row }) => (
+
         <span className="font-mono text-[10px] text-zinc-700">{row.index + 1}</span>
       ),
       size: 40,
@@ -98,7 +116,16 @@ export function AuditorTable({ data }: AuditorTableProps) {
       header: ({ column }) => (
         <SortableHeader label="Est. Value" toggleSorting={(d) => column.toggleSorting(d)} getIsSorted={() => column.getIsSorted()} />
       ),
-      cell: ({ row }) => <ValuationBar value={row.original.simulatedValuation} max={maxVal} />,
+      cell: ({ row }) => (
+        <ValuationBar 
+          value={row.original.simulatedValuation} 
+          max={maxVal} 
+          isLive={row.original.isLive} 
+          currency={row.original.currency}
+        />
+      ),
+
+
     },
     {
       accessorKey: "semanticScore",
@@ -128,15 +155,21 @@ export function AuditorTable({ data }: AuditorTableProps) {
     {
       accessorKey: "purchasePrice",
       header: "Purchase",
-      cell: ({ row }) => (
-        <span className="font-mono text-xs text-zinc-500">
-          {row.original.purchasePrice != null ? `$${row.original.purchasePrice.toLocaleString()}` : "—"}
-        </span>
-      ),
+      cell: ({ row }) => {
+        const symbol = row.original.currency === "INR" ? "₹" : "$";
+        return (
+          <span className="font-mono text-xs text-zinc-500">
+            {row.original.purchasePrice != null ? `${symbol}${row.original.purchasePrice.toLocaleString()}` : "—"}
+          </span>
+        );
+      },
+
     },
   ];
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
+
     data,
     columns,
     state: { sorting },

@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+
 import { motion } from "framer-motion";
 import {
   TrendingUp, TrendingDown, Activity, Globe,
   ArrowUpRight, ArrowDownRight, Clock, Bookmark,
 } from "lucide-react";
-import { getDashboardMetrics, type DashboardMetrics } from "@/services/mock";
+import { getDashboardMetrics as getRealDashboardMetrics, type DashboardMetrics } from "@/services";
+
+
 import { useAppStore } from "@/store/useAppStore";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Sparkline } from "@/components/ui/sparkline";
@@ -259,15 +262,55 @@ function WatchlistPanel() {
 // ---------------------------------------------------------------------------
 
 export default function OverviewPage() {
-  const [metrics, setMetrics] = useState<DashboardMetrics>(() => getDashboardMetrics());
+  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const { sessionToken } = useAppStore();
+
+
+  // Load real metrics if authenticated
+  const loadMetrics = useCallback(async () => {
+    if (!sessionToken) {
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const data = await getRealDashboardMetrics(sessionToken);
+      setMetrics(data);
+    } catch (err) {
+      console.warn("Failed to load real metrics", err);
+      // If backend fails, we keep the previous metrics or show nothing
+    } finally {
+      setIsLoading(false);
+    }
+  }, [sessionToken]);
+
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadMetrics();
+  }, [loadMetrics]);
+
+
 
   // Refresh metrics every 3 seconds (FR-03 live simulation)
   useEffect(() => {
     const id = setInterval(() => {
-      setMetrics(getDashboardMetrics());
+      loadMetrics();
     }, 3000);
     return () => clearInterval(id);
-  }, []);
+  }, [loadMetrics]);
+
+
+  if (isLoading && !metrics) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!metrics) return null;
 
   const metricList = [
     metrics.portfolioValue,
@@ -276,6 +319,7 @@ export default function OverviewPage() {
     metrics.watchlistSize,
   ];
 
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -283,7 +327,7 @@ export default function OverviewPage() {
         <div>
           <h1 className="font-mono text-lg font-bold text-white tracking-tight">
             Nerve Center
-            <span className="ml-2 text-zinc-600">// Portfolio Overview</span>
+            <span className="ml-2 text-zinc-600">- Portfolio Overview</span>
           </h1>
           <div className="flex items-center gap-2 mt-1">
             <Clock className="h-3 w-3 text-zinc-700" strokeWidth={1.5} />

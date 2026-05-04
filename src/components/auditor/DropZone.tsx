@@ -125,7 +125,7 @@ export function DropZone({ onFileAccepted, isProcessing, rowCount, errorMessage 
               Drop your CSV here, or click to browse
             </p>
             <p className="font-mono text-xs text-zinc-600">
-              Accepts .csv · Requires "Domain" or "Domain Name" column · Up to 10,000 rows (first 50 processed)
+              Accepts .csv · Requires &quot;Domain&quot; or &quot;Domain Name&quot; column · Up to 10,000 rows (first 50 processed)
             </p>
           </>
         )}
@@ -158,10 +158,11 @@ export function DropZone({ onFileAccepted, isProcessing, rowCount, errorMessage 
               {errorMessage ?? "Invalid file — please upload a .csv"}
             </p>
             <p className="font-mono text-xs text-zinc-600">
-              Required: "Domain" or "Domain Name" column header
+              Required: &quot;Domain&quot; or &quot;Domain Name&quot; column header
             </p>
           </>
         )}
+
       </div>
 
       {/* Clear button */}

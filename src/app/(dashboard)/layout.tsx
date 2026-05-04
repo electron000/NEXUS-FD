@@ -28,11 +28,13 @@ import { cn } from "@/lib/utils";
 // ---------------------------------------------------------------------------
 
 const NAV_ITEMS = [
-  { href: "/overview",  label: "Nerve Center",     icon: LayoutDashboard, id: "overview",  desc: "Portfolio metrics" },
-  { href: "/terminal",  label: "Domain Terminal",   icon: Terminal,        id: "terminal",  desc: "Valuation engine" },
-  { href: "/auditor",   label: "Portfolio Auditor", icon: FileSpreadsheet, id: "auditor",   desc: "Bulk CSV analysis" },
-  { href: "/watchlist", label: "Watchlist",          icon: Bookmark,        id: "watchlist", desc: "Tracked assets"   },
+  { href: "/overview",  label: "Nerve Center",     icon: LayoutDashboard, id: "overview",  desc: "- Portfolio metrics" },
+  { href: "/terminal",  label: "Domain Terminal",   icon: Terminal,        id: "terminal",  desc: "- Valuation engine" },
+  { href: "/auditor",   label: "Portfolio Auditor", icon: FileSpreadsheet, id: "auditor",   desc: "- Bulk CSV analysis" },
+  { href: "/watchlist", label: "Watchlist",          icon: Bookmark,        id: "watchlist", desc: "- Tracked assets"   },
+  { href: "/settings",  label: "Settings",           icon: Settings,        id: "settings",  desc: "- API & Config"     },
 ];
+
 
 // ---------------------------------------------------------------------------
 // Mobile Drawer
@@ -40,7 +42,8 @@ const NAV_ITEMS = [
 
 function MobileDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const pathname = usePathname();
-  const { sidebarCollapsed, userProfile, logout, watchlist } = useAppStore();
+  const { userProfile, logout, watchlist } = useAppStore();
+
   const router = useRouter();
 
   function handleLogout() {

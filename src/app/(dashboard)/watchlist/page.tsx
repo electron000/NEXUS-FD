@@ -15,7 +15,7 @@ export default function WatchlistPage() {
       <div>
         <h1 className="font-mono text-lg font-bold text-white tracking-tight">
           Watchlist
-          <span className="ml-2 text-zinc-600">// Tracked Assets</span>
+          <span className="ml-2 text-zinc-600">- Tracked Assets</span>
         </h1>
         <p className="mt-1 font-mono text-xs text-zinc-600">
           Domains you&apos;re monitoring for price movements and availability changes

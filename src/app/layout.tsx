@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { Toaster } from "sonner";
+
 
 export const metadata: Metadata = {
   title: "Nexus Digital Asset Terminal",
@@ -20,7 +22,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark" style={{ colorScheme: "dark" }}>
-      <body>{children}</body>
+      <body className="antialiased">
+        {children}
+        <Toaster theme="dark" position="bottom-right" closeButton />
+      </body>
+
     </html>
   );
 }

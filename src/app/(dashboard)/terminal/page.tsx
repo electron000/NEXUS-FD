@@ -6,8 +6,11 @@ import {
   Search, Bookmark, BookmarkCheck, Tag, Clock,
   ChevronRight, Info, X,
 } from "lucide-react";
-import { getDomainValuation, type DomainValuationResponse } from "@/services/mock";
-import { useSSEMock } from "@/hooks/useSSEMock";
+import type { DomainValuationResponse, LoadingPhase } from "@/types";
+
+
+
+
 import { useAppStore } from "@/store/useAppStore";
 import { SSEProgressBar } from "@/components/terminal/SSEProgressBar";
 import { ScoreGauge } from "@/components/terminal/ScoreGauge";
@@ -100,11 +103,17 @@ function ResultsPanel({ data }: { data: DomainValuationResponse }) {
                   Confidence: {(data.score.confidence * 100).toFixed(0)}%
                 </Badge>
               </div>
-              <p className="font-mono text-xs text-zinc-500 leading-relaxed">{data.summary}</p>
+              <p className="font-mono text-xs text-zinc-500 leading-relaxed">
+                {data.summary}
+              </p>
               {/* Tags */}
               <div className="flex flex-wrap gap-2 mt-3">
-                {data.tags.map((tag) => (
-                  <span key={tag} className="flex items-center gap-1 rounded-md border border-zinc-800 px-2 py-0.5 font-mono text-[10px] text-zinc-600">
+                {data.tags.map((tag: string) => (
+
+                  <span
+                    key={tag}
+                    className="flex items-center gap-1 rounded-md border border-zinc-800 px-2 py-0.5 font-mono text-[10px] text-zinc-600"
+                  >
                     <Tag className="h-2.5 w-2.5" />
                     {tag}
                   </span>
@@ -118,12 +127,21 @@ function ResultsPanel({ data }: { data: DomainValuationResponse }) {
                 id="terminal-watchlist-btn"
                 variant={inWatchlist ? "accent" : "terminal"}
                 size="sm"
-                onClick={() => inWatchlist ? removeFromWatchlist(data.domain) : addToWatchlist(data.domain)}
-              >
-                {inWatchlist
-                  ? <><BookmarkCheck className="h-3.5 w-3.5" /> Watching</>
-                  : <><Bookmark className="h-3.5 w-3.5" /> Watch</>
+                onClick={() =>
+                  inWatchlist
+                    ? removeFromWatchlist(data.domain)
+                    : addToWatchlist(data.domain)
                 }
+              >
+                {inWatchlist ? (
+                  <>
+                    <BookmarkCheck className="h-3.5 w-3.5" /> Watching
+                  </>
+                ) : (
+                  <>
+                    <Bookmark className="h-3.5 w-3.5" /> Watch
+                  </>
+                )}
               </Button>
             </div>
           </div>
@@ -141,19 +159,31 @@ function ResultsPanel({ data }: { data: DomainValuationResponse }) {
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 py-2">
             <div className="flex flex-col items-center">
-              <ScoreGauge value={data.score.quantitative} label="Quantitative Baseline" color={overallColor} />
+              <ScoreGauge
+                value={data.score.quantitative}
+                label="Quantitative Baseline"
+                color={overallColor}
+              />
               <p className="mt-2 text-center font-mono text-[10px] text-zinc-600">
                 XGBoost Pricing Model
               </p>
             </div>
             <div className="flex flex-col items-center">
-              <ScoreGauge value={data.score.semantic} label="Semantic Score" color="#8b5cf6" />
+              <ScoreGauge
+                value={data.score.semantic}
+                label="Semantic Score"
+                color="#8b5cf6"
+              />
               <p className="mt-2 text-center font-mono text-[10px] text-zinc-600">
                 Gemini Linguistic Analysis
               </p>
             </div>
             <div className="flex flex-col items-center">
-              <ScoreGauge value={data.score.trend} label="Trend Momentum" color="#06b6d4" />
+              <ScoreGauge
+                value={data.score.trend}
+                label="Trend Momentum"
+                color="#06b6d4"
+              />
               <p className="mt-2 text-center font-mono text-[10px] text-zinc-600">
                 PyTrends Velocity
               </p>
@@ -168,7 +198,7 @@ function ResultsPanel({ data }: { data: DomainValuationResponse }) {
           <CardTitle>Registrar Arbitrage</CardTitle>
         </CardHeader>
         <CardContent className="pt-1 overflow-x-auto">
-          <div className="min-w-[520px]">
+          <div className="min-w-130">
             <ArbitrageTable data={data.pricing} />
           </div>
         </CardContent>
@@ -192,18 +222,17 @@ function ResultsPanel({ data }: { data: DomainValuationResponse }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Terminal Page
-// ---------------------------------------------------------------------------
-
 export default function TerminalPage() {
   const [query, setQuery] = useState("");
   const [isQuerying, setIsQuerying] = useState(false);
   const [result, setResult] = useState<DomainValuationResponse | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  const { loadingPhase, isComplete, progress } = useSSEMock(isQuerying);
-  const { queryHistory, setLastValuation, lastValuation, lastQuery } = useAppStore();
+  const [loadingPhase, setLoadingPhase] = useState<LoadingPhase>("idle");
+  const [progress, setProgress] = useState(0);
+  const [isComplete, setIsComplete] = useState(false);
+
+  const { queryHistory, setLastValuation, lastValuation, lastQuery, sessionToken } = useAppStore();
 
   // Restore last session result
   const activeResult = result ?? lastValuation;
@@ -217,15 +246,50 @@ export default function TerminalPage() {
     setValidationError(null);
     setIsQuerying(true);
     setResult(null);
+    setIsComplete(false);
+    setProgress(0);
+    setLoadingPhase("idle");
 
-    try {
-      const data = await getDomainValuation(clean);
+    if (!sessionToken) {
+      setValidationError("Please log in to perform valuations.");
+      setIsQuerying(false);
+      return;
+    }
+
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+    const eventSource = new EventSource(
+      `${apiBaseUrl}/api/domains/valuation-stream/${encodeURIComponent(clean)}?token=${sessionToken}`
+    );
+
+
+
+    eventSource.addEventListener('progress', (e: MessageEvent) => {
+      const data = JSON.parse(e.data);
+      setLoadingPhase(data.stage);
+      setProgress(data.pct);
+      if (data.stage === 'complete') {
+        setIsComplete(true);
+      }
+    });
+
+    eventSource.addEventListener('complete', (e: MessageEvent) => {
+      const data = JSON.parse(e.data) as DomainValuationResponse;
       setResult(data);
       setLastValuation(clean, data);
-    } finally {
       setIsQuerying(false);
-    }
-  }, [setLastValuation]);
+      eventSource.close();
+    });
+
+    eventSource.addEventListener('error', () => {
+      setValidationError("Valuation failed. Please ensure the backend is running.");
+      setIsQuerying(false);
+      eventSource.close();
+    });
+
+
+  }, [setLastValuation, sessionToken]);
+
+
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -238,7 +302,7 @@ export default function TerminalPage() {
       <div>
         <h1 className="font-mono text-lg font-bold text-white tracking-tight">
           Domain Terminal
-          <span className="ml-2 text-zinc-600">// Valuation Engine</span>
+          <span className="ml-2 text-zinc-600">- Valuation Engine</span>
         </h1>
         <p className="mt-1 font-mono text-xs text-zinc-600">
           Enter any domain to receive a full Nexus Intelligence Core analysis

@@ -8,7 +8,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Loader2, UserPlus } from "lucide-react";
 import { useAppStore } from "@/store/useAppStore";
-import type { UserProfile } from "@/store/useAppStore";
+import { signupUser } from "@/services/auth";
+import type { UserProfile } from "@/types";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -43,6 +45,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const login = useAppStore((s) => s.login);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const {
     register,
@@ -55,13 +58,31 @@ export default function RegisterPage() {
     defaultValues: { role: "analyst" },
   });
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const selectedRole = watch("role");
+
 
   async function onSubmit(data: RegisterForm) {
     setIsLoading(true);
-    await new Promise((res) => setTimeout(res, 1400));
-    login(data.email, data.name, data.role);
-    router.push("/overview");
+    setError(null);
+
+    try {
+      const result = await signupUser(data.email, data.password, data.name);
+      
+      if (!result.success) {
+        setError("Registration failed. Please try again.");
+        return;
+      }
+
+      // Update store with real auth data
+      login(result.user!.email, result.user!.name, result.user!.token, data.role);
+      router.push("/overview");
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Registration failed. Please try again.";
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -158,6 +179,12 @@ export default function RegisterPage() {
           </div>
           {errors.role && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.role.message}</p>}
         </div>
+
+        {error && (
+          <div className="rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-3">
+            <p className="font-mono text-xs text-red-400">{error}</p>
+          </div>
+        )}
 
         <Button
           id="register-submit"

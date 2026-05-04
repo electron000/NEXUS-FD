@@ -1,7 +1,8 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { LoadingPhase } from "@/hooks/useSSEMock";
+import type { LoadingPhase } from "@/types";
+
 import { Progress } from "@/components/ui/progress";
 import {
   Radio,

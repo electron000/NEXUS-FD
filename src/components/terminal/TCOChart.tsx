@@ -10,7 +10,10 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import type { TCODataPoint } from "@/services/mock";
+import type { TCODataPoint } from "@/types";
+
+
+
 
 // ---------------------------------------------------------------------------
 // TCOChart — 5-year Total Cost of Ownership trajectory area chart
@@ -19,6 +22,7 @@ import type { TCODataPoint } from "@/services/mock";
 interface TCOChartProps {
   data: TCODataPoint[];
 }
+
 
 function CustomTooltip({ active, payload, label }: {
   active?: boolean;

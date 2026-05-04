@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Loader2, LogIn, Zap } from "lucide-react";
 import { useAppStore } from "@/store/useAppStore";
+import { loginUser } from "@/services/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -42,13 +43,25 @@ export default function LoginPage() {
   async function onSubmit(data: LoginForm) {
     setIsLoading(true);
     setError(null);
-    // Simulate auth latency (NFR-03)
-    await new Promise((res) => setTimeout(res, 1200));
 
-    // Mock auth — any valid format passes
-    const name = data.email.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-    login(data.email, name, "analyst");
-    router.push("/overview");
+    try {
+      const result = await loginUser(data.email, data.password);
+      
+      if (!result.success) {
+        setError("Invalid email or password. Please try again.");
+        return;
+      }
+
+      // Update store with real auth data
+      login(result.user!.email, result.user!.name, result.user!.token, result.user!.role as "investor" | "brand_manager" | "analyst");
+
+      router.push("/overview");
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Authentication failed. Please try again.";
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   function prefill() {

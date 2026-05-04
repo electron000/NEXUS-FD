@@ -147,11 +147,11 @@ function SidebarButton({ item }: { item: SidebarItem }) {
     <Tooltip text={item.label}>
       {item.type === "anchor" ? (
         <a href={item.href} className={cls}>
-          <Icon className="h-[18px] w-[18px]" strokeWidth={1.5} />
+          <Icon className="h-4.5 w-4.5" strokeWidth={1.5} />
         </a>
       ) : (
         <Link href={item.href} className={cls}>
-          <Icon className="h-[18px] w-[18px]" strokeWidth={1.5} />
+          <Icon className="h-4.5 w-4.5" strokeWidth={1.5} />
         </Link>
       )}
     </Tooltip>
@@ -167,7 +167,7 @@ function FloatingSideNav() {
       className="fixed right-5 top-1/2 z-50 hidden -translate-y-1/2 md:flex flex-col"
     >
       {/* Glow backdrop */}
-      <div className="absolute inset-0 -inset-2 rounded-2xl bg-blue-500/3 blur-xl pointer-events-none" />
+      <div className="absolute inset-0 rounded-2xl bg-blue-500/3 blur-xl pointer-events-none" />
 
       <div className="relative flex flex-col gap-1.5 rounded-2xl border border-zinc-800/70 bg-black/70 p-1.5 backdrop-blur-2xl shadow-[0_0_40px_-10px_rgba(0,0,0,0.8)]">
         {SIDEBAR_ITEMS.map((item, i) => {

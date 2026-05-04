@@ -2,30 +2,10 @@
 
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import type { DomainValuationResponse } from "@/services/mock";
+import { getToken, getUser } from "@/services/auth";
+import type { UserProfile, WatchlistEntry, DomainValuationResponse } from "@/types";
 
-// ---------------------------------------------------------------------------
-// TYPE DEFINITIONS
-// ---------------------------------------------------------------------------
 
-export interface UserProfile {
-  id: string;
-  email: string;
-  name: string;
-  role: "investor" | "brand_manager" | "analyst";
-  preferredCurrency: "USD" | "EUR" | "GBP";
-  defaultExtensions: string[];
-  avatarInitials: string;
-  createdAt: string;
-}
-
-export interface WatchlistEntry {
-  domain: string;
-  addedAt: string;
-  alertPrice?: number;
-  notes?: string;
-  lastValuation?: DomainValuationResponse;
-}
 
 export interface AppState {
   // ── Session ────────────────────────────────────────────────────────────────
@@ -46,7 +26,8 @@ export interface AppState {
   commandPaletteOpen: boolean;
 
   // ── Actions ─────────────────────────────────────────────────────────────────
-  login: (email: string, name: string, role?: UserProfile["role"]) => void;
+  login: (email: string, name: string, token: string, role?: UserProfile["role"]) => void;
+  setAuthFromToken: () => void;
   logout: () => void;
   updateProfile: (updates: Partial<UserProfile>) => void;
 
@@ -83,9 +64,8 @@ export const useAppStore = create<AppState>()(
       commandPaletteOpen: false,
 
       // ── Auth actions ───────────────────────────────────────────────────────
-      login: (email, name, role = "analyst") => {
+      login: (email, name, token, role = "analyst") => {
         const id = `usr_${Date.now().toString(36)}`;
-        const token = `nxt_${id}_${Math.random().toString(36).slice(2)}`;
         set({
           isLoggedIn: true,
           sessionToken: token,
@@ -96,20 +76,53 @@ export const useAppStore = create<AppState>()(
             role,
             preferredCurrency: "USD",
             defaultExtensions: [".com", ".io", ".ai"],
-            avatarInitials: name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase(),
+            avatarInitials: (name || email || "U")
+              .split(" ")
+              .map((w) => w[0])
+              .join("")
+              .slice(0, 2)
+              .toUpperCase(),
             createdAt: new Date().toISOString(),
           },
         });
       },
 
-      logout: () =>
+      setAuthFromToken: () => {
+        const token = getToken();
+        const user = getUser();
+        if (token && user) {
+          set({
+            isLoggedIn: true,
+            sessionToken: token,
+            userProfile: {
+              id: user.id,
+              email: user.email,
+              name: user.name,
+              role: user.role as "investor" | "brand_manager" | "analyst",
+
+              preferredCurrency: "USD",
+              defaultExtensions: [".com", ".io", ".ai"],
+              avatarInitials: (user.name || user.email || "U")
+                .split(" ")
+                .map((w) => w[0])
+                .join("")
+                .slice(0, 2)
+                .toUpperCase(),
+              createdAt: new Date().toISOString(),
+            },
+          });
+        }
+      },
+
+      logout: () => {
         set({
           isLoggedIn: false,
           sessionToken: null,
           userProfile: null,
           lastValuation: null,
           lastQuery: null,
-        }),
+        });
+      },
 
       updateProfile: (updates) =>
         set((state) => ({
