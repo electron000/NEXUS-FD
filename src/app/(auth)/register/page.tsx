@@ -9,7 +9,6 @@ import Link from "next/link";
 import { Loader2, UserPlus } from "lucide-react";
 import { useAppStore } from "@/store/useAppStore";
 import { signupUser } from "@/services/auth";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -48,22 +47,28 @@ export default function RegisterPage() {
     resolver: zodResolver(registerSchema),
   });
 
-
   async function onSubmit(data: RegisterForm) {
     setIsLoading(true);
     setError(null);
 
     try {
       const result = await signupUser(data.email, data.password, data.name);
-      
+
       if (!result.success) {
         setError("Registration failed. Please try again.");
         return;
       }
 
-      // Update store with real auth data
+      // ADDED: Type guard to ensure result.user is defined
+      if (!result.user) {
+        setError("Registration succeeded, but user profile data is missing. Please contact support.");
+        return;
+      }
+
+      // Update store with real auth data safely
       login(result.user);
       router.push("/overview");
+      
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Registration failed. Please try again.";
       setError(errorMessage);
