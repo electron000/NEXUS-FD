@@ -23,6 +23,8 @@ import {
   Scale,
   AlertTriangle,
   Lock,
+  BarChart2,
+  Layers,
 } from "lucide-react";
 import type { DomainValuationResponse, LoadingPhase } from "@/types";
 import { useAppStore } from "@/store/useAppStore";
@@ -50,6 +52,26 @@ function sanitizeDomain(raw: string): string {
     .replace(/^https?:\/\//, "")
     .replace(/\/$/, "")
     .trim();
+}
+
+// ---------------------------------------------------------------------------
+// Tier colour helper
+// ---------------------------------------------------------------------------
+
+function tierColor(tier: string | undefined) {
+  if (!tier) return "text-zinc-400";
+  const t = tier.toLowerCase();
+  if (t === "high") return "text-green-400";
+  if (t === "medium") return "text-yellow-400";
+  return "text-red-400";
+}
+
+function tierBorderColor(tier: string | undefined) {
+  if (!tier) return "border-zinc-700/30 bg-zinc-800/20";
+  const t = tier.toLowerCase();
+  if (t === "high") return "border-green-500/20 bg-green-500/5";
+  if (t === "medium") return "border-yellow-500/20 bg-yellow-500/5";
+  return "border-red-500/20 bg-red-500/5";
 }
 
 // ---------------------------------------------------------------------------
@@ -103,11 +125,10 @@ function ResultsPanel({
   const { addToWatchlist, removeFromWatchlist, isInWatchlist } = useAppStore();
   const inWatchlist = isInWatchlist(data.domain);
 
-  // Check if domain is available for registration
   const isAvailable = data.pricing.some((p) => p.available);
   const isNexusOwned = data.ownership?.isNexusMember === true;
 
-  // 1. ACQUISITION VIEW (The Buyer's Signal)
+  // 1. ACQUISITION VIEW
   const renderAcquisition = () => (
     <div className="space-y-5">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
@@ -165,20 +186,39 @@ function ResultsPanel({
           </Card>
         )}
 
-        <Card className="flex flex-col items-center justify-center py-10 relative">
+        {/* ML Appraisal Summary — replaces null quantitative gauge */}
+        <Card className="flex flex-col justify-center py-8 px-5 gap-5 relative">
           <div className="absolute top-4 right-4">
-            <Tooltip content="Algorithmic assessment of SLD length, TLD authority, and registry scarcity.">
+            <Tooltip content="Investment tier and price estimate from the ML tier + price model pipeline.">
               <Info className="h-3 w-3 text-zinc-700" />
             </Tooltip>
           </div>
-          <ScoreGauge
-            value={data.score.quantitative}
-            label="Scarcity Index"
-            color="#3b82f6"
-          />
-          <p className="mt-4 font-mono text-[10px] text-zinc-500 uppercase tracking-widest text-center">
-            Structural integrity & <br /> TLD Authority
-          </p>
+
+          {/* Predicted Tier */}
+          <div className={cn("rounded-xl border p-4 text-center", tierBorderColor(data.appraisal?.predictedTier))}>
+            <p className="font-mono text-[9px] text-zinc-500 uppercase tracking-widest mb-1">
+              ML Investment Tier
+            </p>
+            <p className={cn("font-mono text-2xl font-bold uppercase tracking-tight", tierColor(data.appraisal?.predictedTier))}>
+              {data.appraisal?.predictedTier ?? "—"}
+            </p>
+            <p className="font-mono text-[9px] text-zinc-600 mt-1 uppercase">
+              {data.appraisal?.tier ?? ""}
+            </p>
+          </div>
+
+          {/* Predicted Price */}
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 text-center">
+            <p className="font-mono text-[9px] text-zinc-500 uppercase tracking-widest mb-1">
+              Predicted Price
+            </p>
+            <p className="font-mono text-lg font-bold text-blue-400 tracking-tight">
+              ₹{data.appraisal?.predictedPrice?.toLocaleString("en-IN") ?? "—"}
+            </p>
+            <p className="font-mono text-[9px] text-zinc-600 mt-1 uppercase">
+              ML estimate
+            </p>
+          </div>
         </Card>
       </div>
 
@@ -220,9 +260,12 @@ function ResultsPanel({
             <p className="font-mono text-xs text-zinc-500 leading-relaxed">
               {isAvailable ? (
                 <>
-                  Based on current registrar pricing and TLD scarcity,{" "}
-                  {data.domain} is a {data.score.grade}-tier asset. We recommend
-                  acquisition via{" "}
+                  Based on current registrar pricing and ML tier assessment,{" "}
+                  {data.domain} is a {data.score.grade}-grade{" "}
+                  <span className={tierColor(data.appraisal?.predictedTier)}>
+                    {data.appraisal?.predictedTier ?? "unrated"}
+                  </span>{" "}
+                  tier asset. We recommend acquisition via{" "}
                   {
                     data.pricing.sort(
                       (a, b) => a.registration - b.registration,
@@ -232,7 +275,7 @@ function ResultsPanel({
                 </>
               ) : isNexusOwned ? (
                 <>
-                  This is a {data.score.grade}-tier asset owned by a{" "}
+                  This is a {data.score.grade}-grade asset owned by a{" "}
                   <strong>Nexus Member</strong>. Acquisition is possible via
                   secure P2P negotiation. The owner is currently{" "}
                   {data.ownership?.isForSale
@@ -242,7 +285,7 @@ function ResultsPanel({
                 </>
               ) : (
                 <>
-                  This is a {data.score.grade}-tier{" "}
+                  This is a {data.score.grade}-grade{" "}
                   <strong>External Asset</strong>. Ownership is not verified on
                   the Nexus network. We recommend adding to your Watchlist to
                   monitor for expiration or future listing.
@@ -276,38 +319,49 @@ function ResultsPanel({
     </div>
   );
 
-  // 2. APPRAISAL VIEW (The Investor's Intelligence)
+  // 2. APPRAISAL VIEW
   const renderAppraisal = () => (
     <div className="space-y-5">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+        {/* Tier Intelligence — replaces null FMV card */}
         <Card glow="green">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Scale className="h-4 w-4 text-green-400" />
-                Fair Market Value (FMV)
+                <Layers className="h-4 w-4 text-green-400" />
+                Tier Intelligence
               </div>
-              <Tooltip content="Estimated value based on historical domain sales, TLD authority, and length/keyword premiums.">
+              <Tooltip content="Investment tier predicted by the RandomForest tier model trained on domain market data.">
                 <Info className="h-3.5 w-3.5 text-zinc-600 cursor-help" />
               </Tooltip>
             </CardTitle>
           </CardHeader>
           <CardContent className="py-10 text-center">
             <p className="font-mono text-[10px] text-zinc-500 uppercase tracking-widest mb-2">
-              Estimated Asset Worth
+              ML Investment Tier
             </p>
-            <h3 className="font-mono text-5xl font-bold text-white tracking-tighter">
-              ${data.appraisal?.value?.toLocaleString()}
+            <h3 className={cn("font-mono text-5xl font-bold tracking-tighter uppercase", tierColor(data.appraisal?.predictedTier))}>
+              {data.appraisal?.predictedTier ?? "—"}
             </h3>
-            <Badge
-              variant="outline"
-              className="mt-4 border-green-500/20 text-green-400 font-mono"
-            >
-              Grade {data.score.grade} Liquidity
-            </Badge>
+            <div className="flex items-center justify-center gap-2 mt-4">
+              <Badge
+                variant="outline"
+                className={cn("font-mono border", tierBorderColor(data.appraisal?.predictedTier))}
+              >
+                {data.appraisal?.tier ?? "Standard"} Category
+              </Badge>
+              <Badge
+                variant="outline"
+                className="font-mono border-zinc-700 text-zinc-400"
+              >
+                Grade {data.score.grade}
+              </Badge>
+            </div>
           </CardContent>
         </Card>
 
+        {/* Predicted Sale Price */}
         <Card glow="cyan">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
@@ -315,7 +369,7 @@ function ResultsPanel({
                 <Zap className="h-4 w-4 text-purple-400" />
                 Predicted Sale Price
               </div>
-              <Tooltip content="Machine learning prediction trained on 1M+ real domain aftermarket transactions.">
+              <Tooltip content="Machine learning prediction from the price model trained on domain market transactions.">
                 <Info className="h-3.5 w-3.5 text-zinc-600 cursor-help" />
               </Tooltip>
             </CardTitle>
@@ -325,10 +379,13 @@ function ResultsPanel({
               ML Price Estimate
             </p>
             <h3 className="font-mono text-4xl font-bold text-blue-400 tracking-tighter">
-              ${data.appraisal?.predictedPrice?.toLocaleString() || "---"}
+              ₹{data.appraisal?.predictedPrice?.toLocaleString("en-IN") ?? "—"}
             </h3>
-            <p className="mt-4 font-mono text-[11px] text-zinc-600">
-              Based on comparable recent sales.
+            <p className="mt-3 font-mono text-[11px] text-zinc-600">
+              Tier:{" "}
+              <span className={cn("font-semibold uppercase", tierColor(data.appraisal?.predictedTier))}>
+                {data.appraisal?.predictedTier ?? "—"}
+              </span>
             </p>
           </CardContent>
         </Card>
@@ -358,7 +415,7 @@ function ResultsPanel({
           </div>
           <ScoreGauge
             value={data.score.trend}
-            label="Velocity"
+            label="Trend Momentum"
             color="#06b6d4"
           />
           <p className="mt-4 font-mono text-[10px] text-zinc-600 uppercase">
@@ -369,7 +426,7 @@ function ResultsPanel({
     </div>
   );
 
-  // 3. EXCHANGE VIEW (The P2P Hub)
+  // 3. EXCHANGE VIEW
   const renderExchange = () => (
     <div className="space-y-5">
       <Card glow={isNexusOwned ? "blue" : undefined}>
@@ -511,21 +568,64 @@ function ResultsPanel({
         </CardContent>
       </Card>
 
-      <Card className="flex flex-col items-center py-8 relative">
-        <div className="absolute top-4 right-4">
-          <Tooltip content="Aggregate authority index based on quantitative, semantic, and trend scores.">
-            <Info className="h-3 w-3 text-zinc-700" />
-          </Tooltip>
-        </div>
-        <ScoreGauge
-          value={data.score.overall}
-          label="Nexus Trust Index"
-          color="#a855f7"
-        />
-        <p className="mt-4 font-mono text-[10px] text-zinc-600 uppercase tracking-widest">
-          Aggregate asset authority
-        </p>
-      </Card>
+      {/* ML Appraisal Summary — replaces null overall score gauge */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        <Card className="flex flex-col items-center py-8 relative">
+          <div className="absolute top-4 right-4">
+            <Tooltip content="NLP sentiment analysis and linguistic affinity matching.">
+              <Info className="h-3 w-3 text-zinc-700" />
+            </Tooltip>
+          </div>
+          <ScoreGauge
+            value={data.score.semantic}
+            label="Semantic Score"
+            color="#8b5cf6"
+          />
+          <p className="mt-4 font-mono text-[10px] text-zinc-600 uppercase tracking-widest text-center">
+            Brand Affinity
+          </p>
+        </Card>
+
+        <Card className="flex flex-col items-center py-8 relative">
+          <div className="absolute top-4 right-4">
+            <Tooltip content="Real-time search momentum from Google Trends.">
+              <Info className="h-3 w-3 text-zinc-700" />
+            </Tooltip>
+          </div>
+          <ScoreGauge
+            value={data.score.trend}
+            label="Trend Momentum"
+            color="#06b6d4"
+          />
+          <p className="mt-4 font-mono text-[10px] text-zinc-600 uppercase tracking-widest text-center">
+            Search Momentum
+          </p>
+        </Card>
+
+        {/* Negotiation context: tier + price */}
+        <Card className="flex flex-col items-center justify-center py-8 px-5 gap-4 relative">
+          <div className="absolute top-4 right-4">
+            <Tooltip content="ML tier and price estimate — useful context for setting a negotiation floor.">
+              <Info className="h-3 w-3 text-zinc-700" />
+            </Tooltip>
+          </div>
+          <BarChart2 className="h-6 w-6 text-purple-400" strokeWidth={1.5} />
+          <div className="text-center">
+            <p className="font-mono text-[9px] text-zinc-500 uppercase tracking-widest mb-1">
+              Negotiation Floor
+            </p>
+            <p className={cn("font-mono text-xl font-bold uppercase", tierColor(data.appraisal?.predictedTier))}>
+              {data.appraisal?.predictedTier ?? "—"}
+            </p>
+            <p className="font-mono text-xs text-blue-400 font-semibold mt-1">
+              ₹{data.appraisal?.predictedPrice?.toLocaleString("en-IN") ?? "—"}
+            </p>
+            <p className="font-mono text-[9px] text-zinc-600 mt-1 uppercase">
+              ML estimate
+            </p>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 
@@ -556,6 +656,16 @@ function ResultsPanel({
                 <GradeBadge grade={data.score.grade} />
                 <Badge variant="default" className="font-mono text-[10px]">
                   Trust: {(data.score.confidence * 100).toFixed(0)}%
+                </Badge>
+                <Badge
+                  variant="outline"
+                  className={cn("font-mono text-[10px] border", tierBorderColor(data.appraisal?.predictedTier))}
+                >
+                  <span className={tierColor(data.appraisal?.predictedTier)}>
+                    {data.appraisal?.predictedTier
+                      ? `${data.appraisal.predictedTier.charAt(0).toUpperCase() + data.appraisal.predictedTier.slice(1)} Tier`
+                      : "Unrated"}
+                  </span>
                 </Badge>
               </div>
               <p className="font-mono text-[11px] text-zinc-500 leading-relaxed max-w-3xl">
