@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Loader2, LogIn, Zap } from "lucide-react";
+import { Loader2, LogIn } from "lucide-react";
 import { useAppStore } from "@/store/useAppStore";
 import { loginUser } from "@/services/auth";
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,6 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
-    setValue,
     formState: { errors },
   } = useForm<LoginForm>({ resolver: zodResolver(loginSchema) });
 
@@ -53,7 +52,7 @@ export default function LoginPage() {
       }
 
       // Update store with real auth data
-      login(result.user!.email, result.user!.name, result.user!.token, result.user!.role as "investor" | "brand_manager" | "analyst");
+      login(result.user);
 
       router.push("/overview");
     } catch (err) {
@@ -64,10 +63,6 @@ export default function LoginPage() {
     }
   }
 
-  function prefill() {
-    setValue("email", "demo@nexus.io");
-    setValue("password", "password");
-  }
 
   return (
     <>
@@ -84,18 +79,6 @@ export default function LoginPage() {
         </p>
       </div>
 
-      {/* Demo prefill */}
-      <button
-        type="button"
-        onClick={prefill}
-        className="mb-6 w-full flex items-center gap-2 rounded-lg border border-blue-500/20 bg-blue-500/5 px-4 py-3 text-left transition-colors hover:border-blue-500/40 hover:bg-blue-500/10"
-      >
-        <Zap className="h-3.5 w-3.5 shrink-0 text-blue-400" strokeWidth={1.5} />
-        <div>
-          <p className="font-mono text-[11px] text-blue-400 tracking-wider uppercase">Demo Access</p>
-          <p className="font-mono text-[10px] text-zinc-600 mt-0.5">demo@nexus.io · password</p>
-        </div>
-      </button>
 
       {/* Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

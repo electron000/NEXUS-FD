@@ -1,43 +1,41 @@
+import { apiClient } from "../config";
+import { DashboardMetrics } from "@/types";
+
 /**
- * user/index.ts
+ * Fetches the current user profile.
+ * Credentials handled automatically via HttpOnly cookies.
  */
-
-import { apiCall } from "../config";
-
-export interface DashboardMetric {
-  label: string;
-  value: number;
-  change: number;
-  prefix?: string;
-  suffix?: string;
-  sparkline: number[];
+export async function getUserProfile() {
+  return apiClient.get('/api/user/profile');
 }
 
-export interface DashboardMetrics {
-  portfolioValue: DashboardMetric;
-  activeDomains: DashboardMetric;
-  monthlyRevenue: DashboardMetric;
-  watchlistSize: DashboardMetric;
-  marketSentiment: number;
-  topMovers: Array<{ domain: string; change: number; value: number }>;
+/**
+ * Updates the current user profile.
+ */
+export async function updateUserProfile(updates: Record<string, unknown>) {
+  return apiClient.put('/api/user/profile', updates);
 }
 
-export async function getUserProfile(token: string) {
-  return apiCall('/api/user/profile', { token });
+/**
+ * Retrieves real-time dashboard metrics.
+ * Now strictly authentic user data.
+ */
+export async function getDashboardMetrics(): Promise<DashboardMetrics> {
+  return apiClient.get('/api/user/dashboard');
 }
 
-export async function updateUserProfile(updates: Record<string, unknown>, token: string) {
-  return apiCall('/api/user/profile', {
-    method: 'PUT',
-    body: updates,
-    token,
+/**
+ * Submits KYC documentation.
+ */
+export async function submitKYC(formData: FormData) {
+  return apiClient.post('/api/user/kyc/submit', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
   });
 }
 
-export async function getDashboardMetrics(token: string): Promise<DashboardMetrics> {
-  return apiCall<DashboardMetrics>('/api/user/dashboard', { token });
-}
-
+/**
+ * System health check.
+ */
 export async function healthCheck(): Promise<{ status: string; db: string }> {
-  return apiCall('/api/health');
+  return apiClient.get('/api/health');
 }

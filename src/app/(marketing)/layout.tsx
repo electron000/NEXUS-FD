@@ -3,7 +3,6 @@
 import { ReactNode, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Globe,
   LayoutDashboard,
   Terminal,
   LogIn,
@@ -14,6 +13,8 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useAppStore } from "@/store/useAppStore";
+
 
 // ─── Tooltip ─────────────────────────────────────────────────────────────────
 
@@ -31,6 +32,7 @@ const Tooltip = ({ text, children }: { text: string; children: ReactNode }) => (
 // ─── Mobile Top Navbar ────────────────────────────────────────────────────────
 
 function TopNavbar() {
+  const isLoggedIn = useAppStore((state) => state.isLoggedIn);
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -75,38 +77,55 @@ function TopNavbar() {
             transition={{ duration: 0.3 }}
             className="overflow-hidden border-t border-zinc-800/50 bg-black/90 backdrop-blur-2xl"
           >
-            <div className="flex flex-col gap-4 px-6 py-5">
-              {/* Section links */}
-              {[
-                { label: "Features", href: "#features" },
-              ].map((item) => (
-                <a
-                  key={item.label}
-                  href={item.href}
-                  onClick={() => setMobileOpen(false)}
-                  className="font-mono text-sm text-zinc-400 hover:text-white transition-colors"
-                >
-                  {item.label}
-                </a>
-              ))}
+            <div className="flex flex-col gap-3 px-6 py-5">
+              {!isLoggedIn ? (
+                <>
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-3 rounded-xl border border-zinc-800/50 bg-zinc-900/40 px-4 py-3 font-mono text-sm text-zinc-300 transition-all hover:bg-zinc-800/60 hover:text-white"
+                  >
+                    <LogIn className="h-4 w-4 text-zinc-500" />
+                    Sign In
+                  </Link>
+                  <Link
+                    href="/register"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-3 rounded-xl bg-blue-600/90 px-4 py-3 font-mono text-sm font-medium text-white transition-all hover:bg-blue-500 hover:shadow-[0_0_20px_-5px_rgba(59,130,246,0.5)]"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    Sign Up
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/overview"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-3 rounded-xl border border-cyan-500/20 bg-cyan-500/5 px-4 py-3 font-mono text-sm text-cyan-100 transition-all hover:bg-cyan-500/10"
+                  >
+                    <LayoutDashboard className="h-4 w-4 text-cyan-400" />
+                    Dashboard
+                  </Link>
+                  <Link
+                    href="/terminal"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-3 rounded-xl border border-blue-500/20 bg-blue-500/5 px-4 py-3 font-mono text-sm text-blue-100 transition-all hover:bg-blue-500/10"
+                  >
+                    <Terminal className="h-4 w-4 text-blue-400" />
+                    Domain Terminal
+                  </Link>
+                </>
+              )}
 
-              {/* Auth CTAs */}
-              <div className="flex flex-col gap-2 pt-2 border-t border-zinc-800/50">
-                <Link
-                  href="/login"
-                  onClick={() => setMobileOpen(false)}
-                  className="rounded-lg border border-zinc-700/60 px-4 py-2.5 font-mono text-sm text-zinc-300 text-center transition-colors hover:bg-zinc-800/50 hover:text-white"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  href="/register"
-                  onClick={() => setMobileOpen(false)}
-                  className="rounded-lg bg-blue-600 px-4 py-2.5 font-mono text-sm text-white text-center transition-colors hover:bg-blue-500"
-                >
-                  Launch Terminal
-                </Link>
-              </div>
+              <a
+                href="#features"
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center gap-3 rounded-xl border border-zinc-800/50 bg-zinc-900/40 px-4 py-3 font-mono text-sm text-zinc-400 transition-all hover:bg-zinc-800/60 hover:text-white"
+              >
+                <Sparkles className="h-4 w-4 text-zinc-500" />
+                Features
+              </a>
             </div>
           </motion.div>
         )}
@@ -118,17 +137,23 @@ function TopNavbar() {
 // ─── Floating Sidebar (Desktop) ───────────────────────────────────────────────
 
 // Clean, minimal items — only what's actionable
-const SIDEBAR_ITEMS = [
-  { id: "features",  label: "Features",        href: "#features",  icon: Sparkles,       type: "anchor" as const  },
-  { id: "divider1",  label: "",                 href: "",           icon: Sparkles,       type: "divider" as const },
-  { id: "overview",  label: "Dashboard",        href: "/overview",  icon: LayoutDashboard,type: "link" as const    },
-  { id: "terminal",  label: "Domain Terminal",  href: "/terminal",  icon: Terminal,       type: "link" as const    },
-  { id: "divider2",  label: "",                 href: "",           icon: Sparkles,       type: "divider" as const },
-  { id: "login",     label: "Sign In",          href: "/login",     icon: LogIn,          type: "link" as const    },
-  { id: "register",  label: "Create Account",   href: "/register",  icon: UserPlus,       type: "link" as const    },
-];
+// Dynamic items based on auth state
+const getSidebarItems = (isLoggedIn: boolean) => {
+  if (!isLoggedIn) {
+    return [
+      { id: "login",     label: "Sign In",      href: "/login",     icon: LogIn,    type: "link" as const   },
+      { id: "register",  label: "Sign Up",      href: "/register",  icon: UserPlus, type: "link" as const   },
+      { id: "features",  label: "Features",     href: "#features",  icon: Sparkles, type: "anchor" as const },
+    ];
+  }
+  return [
+    { id: "overview",  label: "Dashboard",       href: "/overview",  icon: LayoutDashboard, type: "link" as const   },
+    { id: "terminal",  label: "Domain Terminal", href: "/terminal",  icon: Terminal,        type: "link" as const   },
+    { id: "features",  label: "Features",        href: "#features",  icon: Sparkles,        type: "anchor" as const },
+  ];
+};
 
-type SidebarItem = typeof SIDEBAR_ITEMS[number];
+type SidebarItem = ReturnType<typeof getSidebarItems>[number];
 
 function SidebarButton({ item }: { item: SidebarItem }) {
   const Icon = item.icon;
@@ -159,6 +184,9 @@ function SidebarButton({ item }: { item: SidebarItem }) {
 }
 
 function FloatingSideNav() {
+  const isLoggedIn = useAppStore((state) => state.isLoggedIn);
+  const items = getSidebarItems(isLoggedIn);
+
   return (
     <motion.nav
       initial={{ opacity: 0, x: 20 }}
@@ -170,21 +198,16 @@ function FloatingSideNav() {
       <div className="absolute inset-0 rounded-2xl bg-blue-500/3 blur-xl pointer-events-none" />
 
       <div className="relative flex flex-col gap-1.5 rounded-2xl border border-zinc-800/70 bg-black/70 p-1.5 backdrop-blur-2xl shadow-[0_0_40px_-10px_rgba(0,0,0,0.8)]">
-        {SIDEBAR_ITEMS.map((item, i) => {
-          if (item.type === "divider") {
-            return <div key={`div-${i}`} className="my-1 h-px bg-zinc-800/80 mx-1" />;
-          }
-          return (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0, x: 12 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.06 + 0.35, duration: 0.3 }}
-            >
-              <SidebarButton item={item} />
-            </motion.div>
-          );
-        })}
+        {items.map((item, i) => (
+          <motion.div
+            key={item.id}
+            initial={{ opacity: 0, x: 12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: i * 0.06 + 0.35, duration: 0.3 }}
+          >
+            <SidebarButton item={item} />
+          </motion.div>
+        ))}
       </div>
     </motion.nav>
   );
@@ -193,50 +216,54 @@ function FloatingSideNav() {
 // ─── Footer ──────────────────────────────────────────────────────────────────
 
 function Footer() {
-  const links = {
-    Product: ["Features", "Pricing", "Changelog", "Roadmap"],
-    Legal:   ["Terms of Service", "Privacy Policy", "Security", "Compliance"],
-    Socials: ["Twitter / X", "LinkedIn", "GitHub", "Discord"],
-  };
+  const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-zinc-800/60 bg-zinc-950 px-6 pb-10 pt-16">
-      <div className="mx-auto max-w-6xl">
-        <div className="mb-12 grid grid-cols-2 gap-10 sm:grid-cols-4">
-          <div className="col-span-2 sm:col-span-1">
-            <div className="mb-4 flex items-center gap-2.5">
-              <Image src="/nexus.webp" alt="Nexus Logo" width={50} height={50} className="object-contain" />
-              <span className="font-mono text-base font-bold uppercase tracking-[0.18em] text-white">NEXUS</span>
-            </div>
-            <p className="text-sm leading-relaxed text-zinc-600">
-              Institutional-grade domain intelligence for serious investors.
-            </p>
+    <footer className="border-t border-zinc-800/60 bg-black px-6 py-8">
+      <div className="mx-auto max-w-7xl flex flex-col md:flex-row justify-between items-center gap-6">
+        {/* Brand & Copyright */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2.5 opacity-80">
+            <Image
+              src="/nexus.webp"
+              alt="Nexus Logo"
+              width={24}
+              height={24}
+              className="object-contain"
+            />
+            <span className="font-mono text-xs font-bold uppercase tracking-widest text-white">
+              NEXUS
+            </span>
           </div>
-
-          {Object.entries(links).map(([category, items]) => (
-            <div key={category}>
-              <h4 className="mb-4 font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">{category}</h4>
-              <ul className="space-y-2.5">
-                {items.map((item) => (
-                  <li key={item}>
-                    <a href="#" className="text-sm text-zinc-600 transition-colors duration-200 hover:text-zinc-400">
-                      {item}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          <span className="font-mono text-[10px] text-zinc-600 uppercase tracking-tight">
+            © {currentYear} Digital Asset Terminal
+          </span>
         </div>
 
-        <div className="flex flex-col items-start justify-between gap-4 border-t border-zinc-800/50 pt-8 sm:flex-row sm:items-center">
-          <p className="font-mono text-xs text-zinc-700">
-            © 2025 Nexus Digital Asset Terminal. All rights reserved.
-          </p>
+        {/* Minimal Legal Links */}
+        <nav className="flex gap-8">
+          {["Terms", "Privacy", "Security"].map((link) => (
+            <a
+              key={link}
+              href="#"
+              className="font-mono text-[10px] uppercase tracking-widest text-zinc-500 hover:text-blue-400 transition-colors"
+            >
+              {link}
+            </a>
+          ))}
+        </nav>
+
+        {/* Infrastructure Status */}
+        <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5">
-            <Globe className="h-3.5 w-3.5 text-zinc-700" strokeWidth={1.5} />
-            <span className="font-mono text-xs text-zinc-700">Global Infrastructure · 99.99% uptime SLA</span>
+            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="font-mono text-[10px] text-zinc-500 uppercase tracking-widest">
+              Global Infrastructure
+            </span>
           </div>
+          <span className="font-mono text-[10px] text-emerald-500/80 uppercase tracking-widest border-l border-zinc-800 pl-3">
+            99.99% Uptime SLA
+          </span>
         </div>
       </div>
     </footer>

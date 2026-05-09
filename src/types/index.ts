@@ -1,31 +1,32 @@
 /**
- * Central Type Definitions for NEXUS Terminal
+ * NEXUS Terminal - Central Type Manifest
+ * Strictly authentic data structures.
  */
 
-// --- Authentication & User ---
+// --- Session & Identity ---
 export type LoadingPhase =
   | "idle"
   | "Scraping Registrars..."
   | "Analyzing Linguistics..."
-  | "Querying Google Trends..."
+  | "Ownership Analysis..."
   | "Synthesizing Intelligence..."
   | "complete";
 
 export type UserRole = "investor" | "brand_manager" | "analyst";
-
 
 export interface UserProfile {
   id: string;
   email: string;
   name: string;
   role: UserRole;
-  preferredCurrency: "USD" | "EUR" | "GBP" | string;
+  is_admin: boolean;
+  kyc_status?: 'unverified' | 'pending' | 'verified' | 'rejected';
   defaultExtensions: string[];
   avatarInitials: string;
   createdAt: string;
 }
 
-// --- Domain Valuation ---
+// --- Intelligence & Valuation ---
 export interface NexusValueScore {
   overall: number;
   quantitative: number;
@@ -38,21 +39,33 @@ export interface NexusValueScore {
 export interface RegistrarPricing {
   registrar: string;
   logoSlug: string;
-  initial: number;
+  registration: number;
   renewal: number;
   transfer: number;
-  promo: string | null;
+  privacy: number;
   available: boolean;
   affiliateUrl: string;
   isLive?: boolean;
   currency?: string;
 }
 
-export interface TCODataPoint {
-  year: number;
-  bestCase: number;
-  expected: number;
-  worstCase: number;
+export interface OwnershipInfo {
+  isNexusMember: boolean;
+  isVerified: boolean;
+  ownerName?: string;
+  organization?: string;
+  country?: string;
+  isForSale?: boolean;
+  askingPrice?: number;
+  lastUpdated: string;
+}
+
+export interface AppraisalInfo {
+  value: number;
+  confidence: number;
+  tier: 'Premium' | 'Investment' | 'Standard' | 'high' | 'medium' | 'low';
+  predictedPrice?: number;
+  predictedTier?: string;
 }
 
 export interface DomainValuationResponse {
@@ -61,40 +74,11 @@ export interface DomainValuationResponse {
   sld: string;
   score: NexusValueScore;
   pricing: RegistrarPricing[];
-  tco: TCODataPoint[];
+  ownership?: OwnershipInfo;
+  appraisal?: AppraisalInfo;
   summary: string;
   tags: string[];
   timestamp: string;
-}
-
-// --- Portfolio & Auditor ---
-export interface AuditorResult extends DomainValuationResponse {
-  simulatedValuation: number;
-  purchasePrice?: number;
-  // Flattened for table accessors
-  semanticScore: number;
-  trendMomentum: number;
-  grade: "S" | "A" | "B" | "C" | "D" | "F";
-
-  isLive?: boolean;
-  currency?: string;
-}
-
-
-export interface PortfolioUploadResponse<T = unknown> {
-  jobId: string;
-  status: 'pending' | 'processing' | 'complete' | 'failed';
-  resultsCount?: number;
-  results?: T[];
-  error?: string;
-}
-
-export interface NexusScoreResponse {
-  domain: string;
-  quantitative_baseline: number;
-  semantic_score: number;
-  trend_momentum: number;
-  model_used: string;
 }
 
 // --- Watchlist ---
@@ -104,4 +88,31 @@ export interface WatchlistEntry {
   alertPrice?: number;
   notes?: string;
   lastValuation?: DomainValuationResponse;
+}
+
+// --- Dashboard & Metrics ---
+export interface DashboardMetric {
+  label: string;
+  value: number | string;
+  change: number;
+  prefix?: string;
+  suffix?: string;
+}
+
+export interface DashboardMetrics {
+  portfolioValue: DashboardMetric;
+  activeDomains: DashboardMetric;
+  monthlyRevenue: DashboardMetric;
+  watchlistSize: DashboardMetric;
+}
+
+// --- Direct Score Proxy (Legacy/Direct) ---
+export interface NexusScoreResponse {
+  domain: string;
+  quantitative_baseline: number;
+  semantic_score: number;
+  trend_momentum: number;
+  predicted_price?: number;
+  predicted_tier?: string;
+  model_used: string;
 }

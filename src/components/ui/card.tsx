@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 const Card = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement> & { glow?: "blue" | "cyan" | "green" | "none" }
+  React.HTMLAttributes<HTMLDivElement> & { glow?: "blue" | "cyan" | "green" | "purple" | "none" }
 >(({ className, glow = "none", ...props }, ref) => {
   const glowClass =
     glow === "blue"
@@ -16,6 +16,8 @@ const Card = React.forwardRef<
       ? "glow-cyan"
       : glow === "green"
       ? "glow-green"
+      : glow === "purple"
+      ? "glow-purple"
       : "";
   return (
     <div
@@ -92,4 +94,3 @@ const CardFooter = React.forwardRef<
 CardFooter.displayName = "CardFooter";
 
 export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter };
-

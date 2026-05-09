@@ -9,7 +9,6 @@ import Link from "next/link";
 import { Loader2, UserPlus } from "lucide-react";
 import { useAppStore } from "@/store/useAppStore";
 import { signupUser } from "@/services/auth";
-import type { UserProfile } from "@/types";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,16 +25,10 @@ const registerSchema = z.object({
     .min(8, "Password must be at least 8 characters")
     .regex(/[A-Z]/, "Must contain an uppercase letter")
     .regex(/[0-9]/, "Must contain a number"),
-  role: z.enum(["investor", "brand_manager", "analyst"]),
 });
 
 type RegisterForm = z.infer<typeof registerSchema>;
 
-const ROLES: { value: UserProfile["role"]; label: string; desc: string }[] = [
-  { value: "investor",      label: "Domain Investor",    desc: "Portfolio analysis & arbitrage signals" },
-  { value: "brand_manager", label: "Brand Manager",       desc: "Bulk discovery & WHOIS intelligence" },
-  { value: "analyst",       label: "Financial Analyst",   desc: "TCO modeling & market metrics" },
-];
 
 // ---------------------------------------------------------------------------
 // Page
@@ -50,16 +43,10 @@ export default function RegisterPage() {
   const {
     register,
     handleSubmit,
-    watch,
-    setValue,
     formState: { errors },
   } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { role: "analyst" },
   });
-
-  // eslint-disable-next-line react-hooks/incompatible-library
-  const selectedRole = watch("role");
 
 
   async function onSubmit(data: RegisterForm) {
@@ -75,7 +62,7 @@ export default function RegisterPage() {
       }
 
       // Update store with real auth data
-      login(result.user!.email, result.user!.name, result.user!.token, data.role);
+      login(result.user);
       router.push("/overview");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Registration failed. Please try again.";
@@ -148,37 +135,6 @@ export default function RegisterPage() {
           {errors.password && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.password.message}</p>}
         </div>
 
-        {/* Role selector */}
-        <div>
-          <label className="mb-2 block font-mono text-[11px] uppercase tracking-widest text-zinc-500">
-            User Profile
-          </label>
-          <div className="space-y-2">
-            {ROLES.map((r) => (
-              <button
-                key={r.value}
-                type="button"
-                onClick={() => setValue("role", r.value)}
-                className={`w-full flex items-start gap-3 rounded-lg border px-4 py-3 text-left transition-all duration-200 ${
-                  selectedRole === r.value
-                    ? "border-blue-500/50 bg-blue-500/8 shadow-[0_0_15px_-5px_rgba(59,130,246,0.3)]"
-                    : "border-zinc-800 bg-transparent hover:border-zinc-700 hover:bg-zinc-800/20"
-                }`}
-              >
-                <div
-                  className={`mt-0.5 h-3.5 w-3.5 shrink-0 rounded-full border-2 transition-colors ${
-                    selectedRole === r.value ? "border-blue-400 bg-blue-400" : "border-zinc-600"
-                  }`}
-                />
-                <div>
-                  <p className="font-mono text-xs font-semibold text-white">{r.label}</p>
-                  <p className="font-mono text-[10px] text-zinc-500 mt-0.5">{r.desc}</p>
-                </div>
-              </button>
-            ))}
-          </div>
-          {errors.role && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.role.message}</p>}
-        </div>
 
         {error && (
           <div className="rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-3">

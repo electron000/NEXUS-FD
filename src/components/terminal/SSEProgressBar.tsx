@@ -10,6 +10,7 @@ import {
   TrendingUp,
   Cpu,
   CheckCircle2,
+  Shield
 } from "lucide-react";
 
 // ---------------------------------------------------------------------------
@@ -19,7 +20,7 @@ import {
 const PHASE_META: Record<string, { icon: React.ElementType; color: string }> = {
   "Scraping Registrars...":     { icon: Radio,        color: "text-blue-400" },
   "Analyzing Linguistics...":   { icon: Brain,        color: "text-purple-400" },
-  "Querying Google Trends...":  { icon: TrendingUp,   color: "text-cyan-400" },
+  "Ownership Analysis...":      { icon: Shield,       color: "text-cyan-400" },
   "Synthesizing Intelligence...": { icon: Cpu,        color: "text-emerald-400" },
   "complete":                   { icon: CheckCircle2, color: "text-emerald-400" },
   "idle":                       { icon: Radio,        color: "text-zinc-500" },
@@ -38,7 +39,7 @@ export function SSEProgressBar({ phase, progress, isComplete }: SSEProgressBarPr
   const PHASES: LoadingPhase[] = [
     "Scraping Registrars...",
     "Analyzing Linguistics...",
-    "Querying Google Trends...",
+    "Ownership Analysis...",
     "Synthesizing Intelligence...",
   ];
   const currentIndex = PHASES.indexOf(phase);

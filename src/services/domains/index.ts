@@ -1,10 +1,9 @@
+import { apiClient } from "../config";
+
 /**
- * domains/index.ts
+ * NEXUS DOMAIN SERVICES
+ * Handles authentic domain availability and registrar arbitrage.
  */
-
-import { apiCall } from "../config";
-import type { NexusScoreResponse, LoadingPhase } from "@/types";
-
 
 export interface DomainCheckResult {
   domain: string;
@@ -17,25 +16,16 @@ export interface DomainCheckResult {
   }>;
 }
 
-export async function getNexusScore(domain: string, token?: string): Promise<NexusScoreResponse> {
-  return apiCall<NexusScoreResponse>('/api/ml/nexus-score', {
-    method: 'POST',
-    body: { domain },
-    token,
-  });
+/**
+ * Bulk checks domain availability across multiple registrars.
+ */
+export async function checkDomains(domainList: string[]): Promise<DomainCheckResult[]> {
+  return apiClient.post('/api/domains/check', { domainList });
 }
 
-export async function checkDomains(
-  domainList: string[],
-  token: string
-): Promise<DomainCheckResult[]> {
-  return apiCall<DomainCheckResult[]>('/api/domains/check', {
-    method: 'POST',
-    body: { domainList },
-    token,
-  });
-}
-
-export async function getDomainDetails(domain: string, token: string) {
-  return apiCall(`/api/domains/${encodeURIComponent(domain)}`, { token });
+/**
+ * Retrieves cached details for a specific domain.
+ */
+export async function getDomainDetails(domain: string) {
+  return apiClient.get(`/api/domains/${encodeURIComponent(domain)}`);
 }

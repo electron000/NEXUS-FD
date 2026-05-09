@@ -20,7 +20,9 @@ export function ScoreGauge({
   size = 140,
 }: ScoreGaugeProps) {
   const numericValue = typeof value === "number" && !isNaN(value) ? value : 0;
-  const clampedValue = Math.min(100, Math.max(0, numericValue));
+  // Strictly round to prevent decimal overflow in the UI
+  const clampedValue = Math.round(Math.min(100, Math.max(0, numericValue)));
+  
   const pathRef = useRef<SVGPathElement>(null);
   const indicatorRef = useRef<SVGCircleElement>(null);
 

@@ -2,16 +2,18 @@
 
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { getToken, getUser } from "@/services/auth";
-import type { UserProfile, WatchlistEntry, DomainValuationResponse } from "@/types";
-
-
+import { getUser, saveUser } from "@/services/auth";
+import type {
+  UserProfile,
+  WatchlistEntry,
+  DomainValuationResponse,
+} from "@/types";
 
 export interface AppState {
   // ── Session ────────────────────────────────────────────────────────────────
   isLoggedIn: boolean;
-  sessionToken: string | null;
   userProfile: UserProfile | null;
+  _hasHydrated: boolean; // Added for hydration tracking
 
   // ── Watchlist ──────────────────────────────────────────────────────────────
   watchlist: WatchlistEntry[];
@@ -26,17 +28,24 @@ export interface AppState {
   commandPaletteOpen: boolean;
 
   // ── Actions ─────────────────────────────────────────────────────────────────
-  login: (email: string, name: string, token: string, role?: UserProfile["role"]) => void;
-  setAuthFromToken: () => void;
+  setHasHydrated: (state: boolean) => void; // Added
+  login: (user: UserProfile) => void;
+  setAuthFromSession: () => void;
   logout: () => void;
   updateProfile: (updates: Partial<UserProfile>) => void;
 
   addToWatchlist: (domain: string, notes?: string) => void;
   removeFromWatchlist: (domain: string) => void;
-  updateWatchlistEntry: (domain: string, updates: Partial<WatchlistEntry>) => void;
+  updateWatchlistEntry: (
+    domain: string,
+    updates: Partial<WatchlistEntry>,
+  ) => void;
   isInWatchlist: (domain: string) => boolean;
 
-  setLastValuation: (domain: string, valuation: DomainValuationResponse) => void;
+  setLastValuation: (
+    domain: string,
+    valuation: DomainValuationResponse,
+  ) => void;
   clearValuation: () => void;
 
   toggleSidebar: () => void;
@@ -45,17 +54,13 @@ export interface AppState {
   closeCommandPalette: () => void;
 }
 
-// ---------------------------------------------------------------------------
-// STORE
-// ---------------------------------------------------------------------------
-
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
       // ── Initial state ──────────────────────────────────────────────────────
       isLoggedIn: false,
-      sessionToken: null,
       userProfile: null,
+      _hasHydrated: false, // Default to false
       watchlist: [],
       lastQuery: null,
       lastValuation: null,
@@ -63,52 +68,38 @@ export const useAppStore = create<AppState>()(
       sidebarCollapsed: false,
       commandPaletteOpen: false,
 
+      // ── Hydration action ───────────────────────────────────────────────────
+      setHasHydrated: (state) => set({ _hasHydrated: state }),
+
       // ── Auth actions ───────────────────────────────────────────────────────
-      login: (email, name, token, role = "analyst") => {
-        const id = `usr_${Date.now().toString(36)}`;
+      login: (user) => {
         set({
           isLoggedIn: true,
-          sessionToken: token,
           userProfile: {
-            id,
-            email,
-            name,
-            role,
-            preferredCurrency: "USD",
-            defaultExtensions: [".com", ".io", ".ai"],
-            avatarInitials: (name || email || "U")
+            ...user,
+            avatarInitials: (user.name || user.email || "U")
               .split(" ")
-              .map((w) => w[0])
+              .map((w: string) => w[0])
               .join("")
               .slice(0, 2)
               .toUpperCase(),
-            createdAt: new Date().toISOString(),
           },
         });
       },
 
-      setAuthFromToken: () => {
-        const token = getToken();
+      setAuthFromSession: () => {
         const user = getUser();
-        if (token && user) {
+        if (user) {
           set({
             isLoggedIn: true,
-            sessionToken: token,
             userProfile: {
-              id: user.id,
-              email: user.email,
-              name: user.name,
-              role: user.role as "investor" | "brand_manager" | "analyst",
-
-              preferredCurrency: "USD",
-              defaultExtensions: [".com", ".io", ".ai"],
+              ...user,
               avatarInitials: (user.name || user.email || "U")
                 .split(" ")
-                .map((w) => w[0])
+                .map((w: string) => w[0])
                 .join("")
                 .slice(0, 2)
                 .toUpperCase(),
-              createdAt: new Date().toISOString(),
             },
           });
         }
@@ -117,19 +108,26 @@ export const useAppStore = create<AppState>()(
       logout: () => {
         set({
           isLoggedIn: false,
-          sessionToken: null,
           userProfile: null,
           lastValuation: null,
           lastQuery: null,
+          watchlist: [],
+          queryHistory: [],
         });
       },
 
       updateProfile: (updates) =>
-        set((state) => ({
-          userProfile: state.userProfile ? { ...state.userProfile, ...updates } : null,
-        })),
+        set((state) => {
+          const newProfile = state.userProfile
+            ? { ...state.userProfile, ...updates }
+            : null;
+          if (newProfile) {
+            saveUser(newProfile);
+          }
+          return { userProfile: newProfile };
+        }),
 
-      // ── Watchlist actions ──────────────────────────────────────────────────
+      // ... (Watchlist, Terminal, and UI actions remain unchanged)
       addToWatchlist: (domain, notes) => {
         const existing = get().watchlist.find((e) => e.domain === domain);
         if (existing) return;
@@ -140,22 +138,18 @@ export const useAppStore = create<AppState>()(
           ],
         }));
       },
-
       removeFromWatchlist: (domain) =>
         set((state) => ({
           watchlist: state.watchlist.filter((e) => e.domain !== domain),
         })),
-
       updateWatchlistEntry: (domain, updates) =>
         set((state) => ({
           watchlist: state.watchlist.map((e) =>
-            e.domain === domain ? { ...e, ...updates } : e
+            e.domain === domain ? { ...e, ...updates } : e,
           ),
         })),
-
-      isInWatchlist: (domain) => get().watchlist.some((e) => e.domain === domain),
-
-      // ── Terminal actions ───────────────────────────────────────────────────
+      isInWatchlist: (domain) =>
+        get().watchlist.some((e) => e.domain === domain),
       setLastValuation: (domain, valuation) =>
         set((state) => ({
           lastQuery: domain,
@@ -165,32 +159,29 @@ export const useAppStore = create<AppState>()(
             ...state.queryHistory.filter((q) => q !== domain),
           ].slice(0, 20),
         })),
-
       clearValuation: () => set({ lastValuation: null, lastQuery: null }),
-
-      // ── UI actions ─────────────────────────────────────────────────────────
       toggleSidebar: () =>
         set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
-
       setSidebarCollapsed: (v) => set({ sidebarCollapsed: v }),
-
       openCommandPalette: () => set({ commandPaletteOpen: true }),
       closeCommandPalette: () => set({ commandPaletteOpen: false }),
     }),
     {
       name: "nexus-terminal-store",
       storage: createJSONStorage(() =>
-        typeof window !== "undefined" ? localStorage : ({} as Storage)
+        typeof window !== "undefined" ? localStorage : ({} as Storage),
       ),
-      // Only persist non-transient state
+      // Ensure we set hydrated flag after storage is loaded
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
       partialize: (state) => ({
         isLoggedIn: state.isLoggedIn,
-        sessionToken: state.sessionToken,
         userProfile: state.userProfile,
         watchlist: state.watchlist,
         queryHistory: state.queryHistory,
         sidebarCollapsed: state.sidebarCollapsed,
       }),
-    }
-  )
+    },
+  ),
 );
