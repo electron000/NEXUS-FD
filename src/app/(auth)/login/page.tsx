@@ -45,9 +45,16 @@ export default function LoginPage() {
 
     try {
       const result = await loginUser(data.email, data.password);
-      
+
+      // 1. Guard against failed authentication
       if (!result.success) {
         setError("Invalid email or password. Please try again.");
+        return;
+      }
+
+      // 2. Guard against missing user payloads (Fixes the TypeScript Error)
+      if (!result.user) {
+        setError("Authentication succeeded, but user data is missing. Please contact support.");
         return;
       }
 
@@ -56,13 +63,13 @@ export default function LoginPage() {
 
       router.push("/overview");
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Authentication failed. Please try again.";
+      const errorMessage =
+        err instanceof Error ? err.message : "Authentication failed. Please try again.";
       setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
   }
-
 
   return (
     <>
@@ -79,7 +86,6 @@ export default function LoginPage() {
         </p>
       </div>
 
-
       {/* Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
@@ -95,7 +101,9 @@ export default function LoginPage() {
             className="w-full"
           />
           {errors.email && (
-            <p className="mt-1 font-mono text-[10px] text-red-400">{errors.email.message}</p>
+            <p className="mt-1 font-mono text-[10px] text-red-400">
+              {errors.email.message}
+            </p>
           )}
         </div>
 
@@ -112,7 +120,9 @@ export default function LoginPage() {
             className="w-full"
           />
           {errors.password && (
-            <p className="mt-1 font-mono text-[10px] text-red-400">{errors.password.message}</p>
+            <p className="mt-1 font-mono text-[10px] text-red-400">
+              {errors.password.message}
+            </p>
           )}
         </div>
 
