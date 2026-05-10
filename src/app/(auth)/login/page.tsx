@@ -39,37 +39,43 @@ export default function LoginPage() {
     formState: { errors },
   } = useForm<LoginForm>({ resolver: zodResolver(loginSchema) });
 
-  async function onSubmit(data: LoginForm) {
-    setIsLoading(true);
-    setError(null);
+async function onSubmit(data: LoginForm) {
+  setIsLoading(true);
+  setError(null);
 
-    try {
-      const result = await loginUser(data.email, data.password);
+  try {
+    const result = await loginUser(data.email, data.password);
 
-      // 1. Guard against failed authentication
-      if (!result.success) {
-        setError("Invalid email or password. Please try again.");
-        return;
-      }
-
-      // 2. Guard against missing user payloads (Fixes the TypeScript Error)
-      if (!result.user) {
-        setError("Authentication succeeded, but user data is missing. Please contact support.");
-        return;
-      }
-
-      // Update store with real auth data
-      login(result.user);
-
-      router.push("/overview");
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Authentication failed. Please try again.";
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
+    // 1. Guard against failed authentication
+    if (!result.success) {
+      setError("Invalid email or password. Please try again.");
+      return;
     }
+
+    // 2. Guard against missing user payloads
+    if (!result.user) {
+      setError(
+        "Authentication succeeded, but user data is missing. Please contact support.",
+      );
+      return;
+    }
+
+    // Update store with real auth data
+    login(result.user);
+
+    router.push("/overview");
+  } catch (_err) {
+    // FIXED: Prefixed with an underscore to bypass the unused-vars lint rule
+    // while still safely extracting the error message if one exists.
+    const errorMessage =
+      _err instanceof Error
+        ? _err.message
+        : "Authentication failed. Please try again.";
+    setError(errorMessage);
+  } finally {
+    setIsLoading(false);
   }
+}
 
   return (
     <>

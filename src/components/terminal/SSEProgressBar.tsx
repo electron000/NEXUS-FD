@@ -7,7 +7,6 @@ import { Progress } from "@/components/ui/progress";
 import {
   Radio,
   Brain,
-  TrendingUp,
   Cpu,
   CheckCircle2,
   Shield

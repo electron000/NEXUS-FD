@@ -20,7 +20,6 @@ import {
   ShoppingCart,
   Handshake,
   MessageSquare,
-  Scale,
   AlertTriangle,
   Lock,
   BarChart2,

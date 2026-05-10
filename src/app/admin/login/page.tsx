@@ -31,6 +31,7 @@ export default function AdminLoginPage() {
         toast.error("Invalid credentials");
       }
     } catch (err) {
+      console.error("Login failed:", err);
       toast.error("Internal Server Error");
     } finally {
       setLoading(false);

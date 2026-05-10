@@ -16,12 +16,12 @@ export const ROUTES = {
 
   // --- Protected Dashboard Routes (Requires Auth) ---
   PROTECTED: {
-    OVERVIEW: "/overview",    // Nerve Center
-    TERMINAL: "/terminal",    // Domain Search/Appraisal
-    PORTFOLIO: "/portfolio",  // Asset Management
-    KYC: "/kyc",              // Seller Verification
-    WATCHLIST: "/watchlist",  // Tracked Assets
-    SETTINGS: "/settings",    // User Preferences
+    TERMINAL: "/terminal", // Domain Search/Appraisal
+    OVERVIEW: "/overview", // Nerve Center
+    PORTFOLIO: "/portfolio", // Asset Management
+    KYC: "/kyc", // Seller Verification
+    WATCHLIST: "/watchlist", // Tracked Assets
+    SETTINGS: "/settings", // User Preferences
   },
 
   // --- Administrative Routes (Requires is_admin: true) ---
