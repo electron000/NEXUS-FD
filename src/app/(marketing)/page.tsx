@@ -53,16 +53,16 @@ function useReveal() {
 
 function TerminalMockup() {
   const registrars = [
-    { name: "Porkbun", price: "$11.44", badge: "LOWEST", highlight: true },
-    { name: "Name.com", price: "$13.99", badge: null, highlight: false },
-    { name: "GoDaddy", price: "$19.99", badge: "AVOID", highlight: false },
+    { name: "Porkbun", price: "₹955.00", badge: "LOWEST", highlight: true },
+    { name: "Name.com", price: "₹1,168.00", badge: null, highlight: false },
+    { name: "GoDaddy", price: "₹1,669.00", badge: "AVOID", highlight: false },
   ];
 
   const metrics = [
-    { label: "Portfolio Value", value: "—", note: "Verified data" },
-    { label: "Active Domains", value: "—", note: "Verified data" },
-    { label: "Monthly Revenue", value: "—", note: "Verified data" },
-    { label: "Watchlist", value: "—", note: "Verified data" },
+    { label: "Portfolio Value", value: "₹4.8Cr", note: "Live Valuation" },
+    { label: "Active Assets", value: "12", note: "Verified Ownership" },
+    { label: "Total Invested", value: "₹2.1Cr", note: "Cost Basis" },
+    { label: "Inquiries", value: "08", note: "Active Negotiations" },
   ];
 
   return (
@@ -80,12 +80,12 @@ function TerminalMockup() {
           <span className="h-3 w-3 rounded-full bg-zinc-700" />
         </div>
         <span className="ml-2 md:ml-4 truncate font-mono text-[10px] md:text-xs text-zinc-500 tracking-widest uppercase">
-          nexus://terminal — domain_intelligence
+          nexus://terminal — intelligent_appraisal_v1
         </span>
         <span className="ml-auto flex shrink-0 items-center gap-1.5">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="font-mono text-[10px] text-emerald-400 tracking-widest uppercase hidden sm:inline-block">
-            authenticated
+          <span className="h-1.5 w-1.5 rounded-full bg-blue-400 animate-pulse" />
+          <span className="font-mono text-[10px] text-blue-400 tracking-widest uppercase hidden sm:inline-block">
+            System Synchronized
           </span>
         </span>
       </div>
@@ -108,7 +108,7 @@ function TerminalMockup() {
                     : "border-zinc-800/50 bg-transparent text-zinc-600"
                 }`}
               >
-                <Icon className="h-3 w-3" strokeWidth={1.5} />
+                <Icon className="h-3.5 w-3.5" strokeWidth={1.5} />
                 {label}
               </div>
             ))}
@@ -121,48 +121,54 @@ function TerminalMockup() {
               strokeWidth={1.5}
             />
             <span className="font-mono text-sm text-white flex-1">
-              protocol.ai
+              nexus.ai
             </span>
             <span className="font-mono text-[10px] text-blue-400 border border-blue-500/30 bg-blue-500/10 px-2 py-0.5 rounded-md tracking-widest">
-              ANALYZE
+              ANALYZING
             </span>
           </div>
 
           {/* Result: score + valuation */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
             {[
               {
-                label: "ML Score",
-                value: "91",
+                label: "Nexus Score",
+                value: "94.2",
                 sub: "/ 100",
-                color: "text-emerald-400",
+                color: "text-blue-400",
               },
               {
-                label: "Est. Value",
-                value: "$124.5K",
-                sub: "baseline",
+                label: "Valuation",
+                value: "₹8.4L",
+                sub: "Baseline",
                 color: "text-white",
               },
               {
-                label: "Confidence",
-                value: "High",
-                sub: "XGBoost",
-                color: "text-blue-400",
+                label: "Tier",
+                value: "HIGH",
+                sub: "Model",
+                color: "text-emerald-400",
+              },
+              {
+                label: "Status",
+                value: "OWNED",
+                sub: "Verified",
+                color: "text-amber-400",
               },
             ].map(({ label, value, sub, color }) => (
               <div
                 key={label}
-                className="rounded-xl border border-zinc-800/50 bg-zinc-900/40 p-3 flex flex-col items-center gap-1"
+                className="rounded-xl border border-zinc-800/50 bg-zinc-900/40 p-3 flex flex-col items-center gap-0.5"
               >
-                <span className="font-mono text-[10px] text-zinc-600 tracking-widest uppercase">
+                <span className="font-mono text-[8px] text-zinc-600 tracking-widest uppercase">
                   {label}
                 </span>
                 <span
-                  className={`font-mono text-2xl font-bold tabular-nums ${color}`}
+                  className={`font-mono text-lg font-bold tabular-nums ${color}`}
                 >
                   {value}
                 </span>
-                <span className="font-mono text-[10px] text-zinc-700">
+                <span className="font-mono text-[8px] text-zinc-700">
                   {sub}
                 </span>
               </div>
@@ -174,17 +180,17 @@ function TerminalMockup() {
             <div className="px-3 py-2 border-b border-zinc-800/50 flex items-center justify-between">
               <span className="font-mono text-[10px] text-zinc-500 tracking-widest uppercase flex items-center gap-1.5">
                 <Globe className="h-3 w-3" strokeWidth={1.5} />
-                Registrar Arbitrage
+                Registrar Intelligence
               </span>
               <span className="font-mono text-[10px] text-zinc-700">
-                renewal / yr
+                Annual Renewal
               </span>
             </div>
             {registrars.map((r) => (
               <div
                 key={r.name}
                 className={`flex items-center justify-between px-3 py-2 border-b border-zinc-800/30 last:border-0 transition-colors ${
-                  r.highlight ? "bg-emerald-500/5" : ""
+                  r.highlight ? "bg-blue-500/5" : ""
                 }`}
               >
                 <span
@@ -205,7 +211,7 @@ function TerminalMockup() {
                     </span>
                   )}
                   <span
-                    className={`font-mono text-sm tabular-nums ${r.highlight ? "text-emerald-400" : "text-zinc-500"}`}
+                    className={`font-mono text-sm tabular-nums ${r.highlight ? "text-blue-400" : "text-zinc-500"}`}
                   >
                     {r.price}
                   </span>
@@ -215,53 +221,57 @@ function TerminalMockup() {
           </div>
 
           {/* Action row */}
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 text-zinc-600 font-mono text-[10px]">
-              <Bookmark className="h-3 w-3" strokeWidth={1.5} />
-              Add to Watchlist
+          <div className="flex items-center gap-2 mt-auto">
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded border border-zinc-800 text-zinc-400 font-mono text-[9px] uppercase tracking-widest">
+              <Activity className="h-3 w-3 text-blue-500" strokeWidth={1.5} />
+              Negotiation Active
             </div>
-            <div className="ml-auto flex items-center gap-1.5 text-zinc-700 font-mono text-[10px]">
-              <Activity className="h-3 w-3" strokeWidth={1.5} />
-              Contact Owner
+            <div className="ml-auto flex items-center gap-1.5 text-zinc-700 font-mono text-[10px] uppercase tracking-widest">
+              Syncing Intelligence Core...
             </div>
           </div>
         </div>
 
         {/* ── Right: Overview metrics (what /overview actually shows) ── */}
-        <div className="p-4 md:p-5 flex flex-col gap-3">
+        <div className="p-4 md:p-5 flex flex-col gap-3 bg-zinc-950/40">
           <div className="flex items-center justify-between mb-1">
             <span className="font-mono text-[10px] text-zinc-500 tracking-widest uppercase">
-              Nerve Center
+              Dashboard Metrics
             </span>
             <div className="flex items-center gap-1.5">
-              <Clock className="h-3 w-3 text-zinc-700" strokeWidth={1.5} />
-              <span className="font-mono text-[10px] text-zinc-700">UTC</span>
+              <span className="h-1 w-1 rounded-full bg-blue-500" />
+              <span className="font-mono text-[9px] text-zinc-700 uppercase">Live</span>
             </div>
           </div>
 
           {metrics.map(({ label, value, note }) => (
             <div
               key={label}
-              className="rounded-xl border border-zinc-800/50 bg-zinc-900/40 px-3 py-3 flex flex-col gap-1"
+              className="rounded-xl border border-zinc-800/50 bg-zinc-900/40 px-3 py-3 flex flex-col gap-0.5"
             >
-              <span className="font-mono text-[9px] text-zinc-600 tracking-widest uppercase">
+              <span className="font-mono text-[8px] text-zinc-600 tracking-widest uppercase">
                 {label}
               </span>
-              <span className="font-mono text-xl font-bold text-white tabular-nums">
+              <span className="font-mono text-lg font-bold text-white tabular-nums">
                 {value}
               </span>
-              <div className="flex items-center gap-1.5">
-                <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-                <span className="font-mono text-[9px] text-zinc-700 uppercase">
-                  {note}
-                </span>
-              </div>
+              <span className="font-mono text-[8px] text-zinc-700 uppercase">
+                {note}
+              </span>
             </div>
           ))}
 
-          <div className="mt-auto pt-2 border-t border-zinc-800/40">
-            <span className="font-mono text-[9px] text-zinc-700 uppercase tracking-widest block text-center">
-              V 1.0.4 — PROD
+          <div className="mt-auto pt-4 flex flex-col gap-2">
+            <div className="h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden">
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: "85%" }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="h-full bg-blue-600" 
+              />
+            </div>
+            <span className="font-mono text-[9px] text-zinc-700 uppercase tracking-widest text-center">
+              Synthesizing Intelligence...
             </span>
           </div>
         </div>
@@ -407,6 +417,7 @@ function Hero() {
               backgroundSize: "200% auto",
               backgroundClip: "text",
               WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
             }}
           >
             NEXUS
@@ -427,9 +438,9 @@ function Hero() {
           animate="visible"
           className="mx-auto mb-8 md:mb-10 max-w-2xl text-sm md:text-lg leading-relaxed text-zinc-500"
         >
-          Institutional-grade intelligence for the digital asset class. ML
-          appraisals, registrar arbitrage, Aadhaar-verified P2P connections, and
-          portfolio tracking — unified in a single command surface.
+          Institutional-grade intelligence for the digital asset class. Sub-second ML
+          appraisals, registrar arbitrage, and Aadhaar-verified P2P negotiations — 
+          unified across three specialized terminals.
         </motion.p>
 
         <motion.div
@@ -443,7 +454,7 @@ function Hero() {
             href="/register"
             className="w-full sm:w-auto group flex justify-center items-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 font-mono text-sm font-semibold text-white shadow-[0_0_30px_-5px_rgba(59,130,246,0.4)] transition-all duration-300 hover:bg-blue-500 hover:shadow-[0_0_40px_-5px_rgba(59,130,246,0.55)]"
           >
-            Start Auditing
+            Initialize Terminal
             <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
           </Link>
         </motion.div>
@@ -460,8 +471,9 @@ function StatsStrip() {
   const { ref, inView } = useReveal();
 
   const stats = [
-    { value: "94.7%", label: "Appraisal Accuracy", icon: CheckCircle2 },
-    { value: "S-Tier", label: "Institutional Grade", icon: Layers },
+    { value: "90%+", label: "Model Accuracy", icon: Activity },
+    { value: "04", label: "Analysis Stages", icon: CheckCircle2 },
+    { value: "S-Tier", label: "Model Confidence", icon: Layers },
   ];
 
   return (
@@ -476,7 +488,7 @@ function StatsStrip() {
             "repeating-linear-gradient(90deg, rgba(59,130,246,1) 0px, rgba(59,130,246,1) 1px, transparent 1px, transparent 160px)",
         }}
       />
-      <div className="relative mx-auto grid max-w-5xl grid-cols-1 divide-y divide-zinc-800/40 sm:grid-cols-2 sm:divide-y-0 sm:divide-x">
+      <div className="relative mx-auto grid max-w-5xl grid-cols-1 divide-y divide-zinc-800/40 sm:grid-cols-3 sm:divide-y-0 sm:divide-x">
         {stats.map(({ value, label, icon: Icon }, i) => (
           <motion.div
             key={label}
@@ -517,27 +529,27 @@ function Features() {
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           <FeatureCard
             icon={BarChart3}
-            title="Valuation Core"
-            tag="Intelligence Core"
-            desc="High-performance XGBoost regressor trained on 4,000+ institutional sales, providing sub-second quantitative baselines inside the Domain Terminal."
+            title="Valuation Terminals"
+            tag="Triple Analysis"
+            desc="Specialized interfaces for Acquisition, Exchange, and Appraisal. Each terminal leverages distinct ML pipelines to provide context-aware intelligence."
             delay={0}
             animateTrigger={inView}
           />
 
           <FeatureCard
-            icon={GitFork}
-            title="Registrar Arbitrage"
-            tag="Nerve Center"
-            desc="Direct integration with GoDaddy, Porkbun, and Name.com to surface the lowest renewal cost and acquisition path for any domain, in real-time."
+            icon={TrendingUp}
+            title="Real-time Negotiation"
+            tag="P2P Protocol"
+            desc="Aadhaar-verified buyer-seller communication system. Negotiate domain transfers with institutional trust and real-time message broadcasting."
             delay={0.12}
             animateTrigger={inView}
           />
 
           <FeatureCard
-            icon={TrendingUp}
-            title="P2P Verified Exchange"
-            tag="Trust Authority"
-            desc="Technical ownership validation via DNS TXT/HTML crawling and Aadhaar-based KYC — so every seller in the network carries institutional-grade trust."
+            icon={GitFork}
+            title="4-Stage Synthesis"
+            tag="Intelligence Core"
+            desc="From Ecosystem Scanning to final Intelligence Synthesis. Our multi-stage pipeline ensures sub-second, analyst-grade appraisals for every asset."
             delay={0.18}
             animateTrigger={inView}
           />
@@ -561,8 +573,8 @@ function CTACard() {
 
   const perks = [
     "No credit card required",
-    "First access before public launch",
-    "Cancel anytime",
+    "Real-time market insights",
+    "Instant TLD validation",
   ];
 
   return (
@@ -577,13 +589,13 @@ function CTACard() {
         animate={inView ? "visible" : "hidden"}
         className="relative mx-auto max-w-4xl overflow-hidden rounded-3xl border border-zinc-800/70 bg-zinc-950 shadow-[0_0_100px_-12px_rgba(59,130,246,0.25),0_0_240px_-40px_rgba(59,130,246,0.14)]"
       >
-        <div className="h-px w-full bg-linear-to-r from-transparent via-blue-500/60 to-transparent" />
+        <div className="h-px w-full bg-gradient-to-r from-transparent via-blue-500/60 to-transparent" />
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_55%_at_50%_-5%,rgba(59,130,246,0.09),transparent)]" />
 
-        <div className="absolute top-0 left-0 h-20 w-px bg-linear-to-b from-blue-500/60 to-transparent" />
-        <div className="absolute top-0 left-0 h-px w-20 bg-linear-to-r from-blue-500/60 to-transparent" />
-        <div className="absolute bottom-0 right-0 h-20 w-px bg-linear-to-t from-blue-500/60 to-transparent" />
-        <div className="absolute bottom-0 right-0 h-px w-20 bg-linear-to-l from-blue-500/60 to-transparent" />
+        <div className="absolute top-0 left-0 h-20 w-px bg-gradient-to-b from-blue-500/60 to-transparent" />
+        <div className="absolute top-0 left-0 h-px w-20 bg-gradient-to-r from-blue-500/60 to-transparent" />
+        <div className="absolute bottom-0 right-0 h-20 w-px bg-gradient-to-t from-blue-500/60 to-transparent" />
+        <div className="absolute bottom-0 right-0 h-px w-20 bg-gradient-to-l from-blue-500/60 to-transparent" />
 
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.018]"
@@ -596,7 +608,7 @@ function CTACard() {
 
         <div className="relative z-10 px-6 py-12 text-center sm:px-16 sm:py-20">
           <h2 className="mb-3 md:mb-4 font-mono text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl">
-            Ready to dominate
+            Ready to initialize
             <br />
             <span
               style={{
@@ -607,13 +619,12 @@ function CTACard() {
                 backgroundClip: "text",
               }}
             >
-              the aftermarket?
+              your terminal?
             </span>
           </h2>
 
           <p className="mx-auto mb-8 md:mb-10 max-w-md text-sm md:text-base leading-relaxed text-zinc-500">
-            Join 2,400+ professionals already on the waitlist. Get first access
-            to the terminal before public launch.
+            Join the elite network of domain professionals. Get started with institutional-grade intelligence today.
           </p>
 
           <AnimatePresence mode="wait">
@@ -640,8 +651,8 @@ function CTACard() {
                   onClick={handleSubmit}
                   className="group relative flex w-full sm:w-auto shrink-0 items-center justify-center gap-2.5 overflow-hidden rounded-xl bg-blue-600 px-7 py-3.5 font-mono text-sm font-semibold text-white shadow-[0_0_30px_-5px_rgba(59,130,246,0.45)] transition-all duration-300 hover:bg-blue-500 hover:shadow-[0_0_45px_-5px_rgba(59,130,246,0.6)] active:scale-[0.98]"
                 >
-                  <span className="absolute inset-0 -translate-x-full bg-linear-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-                  <span className="relative">Get Early Access</span>
+                  <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+                  <span className="relative">Access Terminal</span>
                   <ArrowRight className="relative h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
                 </button>
               </motion.div>
@@ -658,11 +669,10 @@ function CTACard() {
                   strokeWidth={1.5}
                 />
                 <p className="font-mono text-lg font-semibold text-white">
-                  You&apos;re on the list.
+                  Verification Complete.
                 </p>
                 <p className="font-mono text-sm text-zinc-500">
-                  We&apos;ll reach out to{" "}
-                  <span className="text-blue-400">{email}</span> before launch.
+                  Welcome to the network, <span className="text-blue-400">{email}</span>.
                 </p>
               </motion.div>
             )}

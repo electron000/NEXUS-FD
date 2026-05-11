@@ -34,6 +34,13 @@ export async function submitKYC(formData: FormData) {
 }
 
 /**
+ * Deletes a portfolio item by ID.
+ */
+export async function deletePortfolioItem(id: string) {
+  return apiClient.delete(`/api/user/portfolio/${id}`);
+}
+
+/**
  * System health check.
  */
 export async function healthCheck(): Promise<{ status: string; db: string }> {

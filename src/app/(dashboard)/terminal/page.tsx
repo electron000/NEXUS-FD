@@ -22,7 +22,6 @@ import {
   MessageSquare,
   AlertTriangle,
   Lock,
-  BarChart2,
   Layers,
 } from "lucide-react";
 import type { DomainValuationResponse, LoadingPhase } from "@/types";
@@ -32,7 +31,7 @@ import { SSEProgressBar } from "@/components/terminal/SSEProgressBar";
 import { ScoreGauge } from "@/components/terminal/ScoreGauge";
 import { ArbitrageTable } from "@/components/terminal/ArbitrageTable";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { GradeBadge, Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Tooltip } from "@/components/ui/tooltip";
@@ -124,7 +123,7 @@ function ResultsPanel({
   const { addToWatchlist, removeFromWatchlist, isInWatchlist } = useAppStore();
   const inWatchlist = isInWatchlist(data.domain);
 
-  const isAvailable = data.pricing.some((p) => p.available);
+  const isAvailable = data.ownership?.registered !== undefined ? !data.ownership.registered : data.pricing.some((p) => p.available);
   const isNexusOwned = data.ownership?.isNexusMember === true;
 
   // 1. ACQUISITION VIEW
@@ -133,7 +132,7 @@ function ResultsPanel({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {isAvailable ? (
           <>
-            <Card glow="blue" className="lg:col-span-2">
+            <Card glow="blue" className="lg:col-span-3">
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -146,12 +145,21 @@ function ResultsPanel({
                 </CardTitle>
               </CardHeader>
               <CardContent className="overflow-x-auto">
-                <ArbitrageTable data={data.pricing} />
+                {data.pricing.length > 0 ? (
+                  <ArbitrageTable data={data.pricing} />
+                ) : (
+                  <div className="py-12 text-center">
+                    <Globe className="h-10 w-10 text-zinc-800 mx-auto mb-4" />
+                    <p className="font-mono text-[11px] text-zinc-500 max-w-xs mx-auto">
+                      Domain is <span className="text-emerald-400 font-bold uppercase">Available</span> for registration, but no direct pricing is currently aggregated for this TLD.
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </>
         ) : (
-          <Card className="lg:col-span-2 border-amber-500/20 bg-amber-500/5">
+          <Card className="lg:col-span-3 border-amber-500/20 bg-amber-500/5">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-amber-500">
                 <AlertTriangle className="h-4 w-4" />
@@ -185,40 +193,7 @@ function ResultsPanel({
           </Card>
         )}
 
-        {/* ML Appraisal Summary — replaces null quantitative gauge */}
-        <Card className="flex flex-col justify-center py-8 px-5 gap-5 relative">
-          <div className="absolute top-4 right-4">
-            <Tooltip content="Investment tier and price estimate from the ML tier + price model pipeline.">
-              <Info className="h-3 w-3 text-zinc-700" />
-            </Tooltip>
-          </div>
 
-          {/* Predicted Tier */}
-          <div className={cn("rounded-xl border p-4 text-center", tierBorderColor(data.appraisal?.predictedTier))}>
-            <p className="font-mono text-[9px] text-zinc-500 uppercase tracking-widest mb-1">
-              ML Investment Tier
-            </p>
-            <p className={cn("font-mono text-2xl font-bold uppercase tracking-tight", tierColor(data.appraisal?.predictedTier))}>
-              {data.appraisal?.predictedTier ?? "—"}
-            </p>
-            <p className="font-mono text-[9px] text-zinc-600 mt-1 uppercase">
-              {data.appraisal?.tier ?? ""}
-            </p>
-          </div>
-
-          {/* Predicted Price */}
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 text-center">
-            <p className="font-mono text-[9px] text-zinc-500 uppercase tracking-widest mb-1">
-              Predicted Price
-            </p>
-            <p className="font-mono text-lg font-bold text-blue-400 tracking-tight">
-              ₹{data.appraisal?.predictedPrice?.toLocaleString("en-IN") ?? "—"}
-            </p>
-            <p className="font-mono text-[9px] text-zinc-600 mt-1 uppercase">
-              ML estimate
-            </p>
-          </div>
-        </Card>
       </div>
 
       <Card>
@@ -259,22 +234,32 @@ function ResultsPanel({
             <p className="font-mono text-xs text-zinc-500 leading-relaxed">
               {isAvailable ? (
                 <>
-                  Based on current registrar pricing and ML tier assessment,{" "}
-                  {data.domain} is a {data.score.grade}-grade{" "}
-                  <span className={tierColor(data.appraisal?.predictedTier)}>
-                    {data.appraisal?.predictedTier ?? "unrated"}
-                  </span>{" "}
-                  tier asset. We recommend acquisition via{" "}
-                  {
-                    data.pricing.sort(
-                      (a, b) => a.registration - b.registration,
-                    )[0]?.registrar
-                  }{" "}
-                  for optimal entry cost.
+                  {data.pricing.length > 0 ? (
+                    <>
+                      Based on current registrar pricing, we recommend acquisition
+                      via{" "}
+                      {
+                        data.pricing.sort(
+                          (a, b) => a.registration - b.registration,
+                        )[0]?.registrar
+                      }{" "}
+                      for optimal entry cost.
+                    </>
+                  ) : (
+                    <>
+                      This domain is verified as{" "}
+                      <strong className="text-emerald-400 uppercase">
+                        Unregistered
+                      </strong>
+                      . While no direct pricing is currently aggregated for this
+                      TLD, it is available for acquisition via your preferred
+                      registrar.
+                    </>
+                  )}
                 </>
               ) : isNexusOwned ? (
                 <>
-                  This is a {data.score.grade}-grade asset owned by a{" "}
+                  This is a premium asset owned by a{" "}
                   <strong>Nexus Member</strong>. Acquisition is possible via
                   secure P2P negotiation. The owner is currently{" "}
                   {data.ownership?.isForSale
@@ -284,7 +269,7 @@ function ResultsPanel({
                 </>
               ) : (
                 <>
-                  This is a {data.score.grade}-grade{" "}
+                  This is an{" "}
                   <strong>External Asset</strong>. Ownership is not verified on
                   the Nexus network. We recommend adding to your Watchlist to
                   monitor for expiration or future listing.
@@ -350,12 +335,6 @@ function ResultsPanel({
               >
                 {data.appraisal?.tier ?? "Standard"} Category
               </Badge>
-              <Badge
-                variant="outline"
-                className="font-mono border-zinc-700 text-zinc-400"
-              >
-                Grade {data.score.grade}
-              </Badge>
             </div>
           </CardContent>
         </Card>
@@ -393,6 +372,22 @@ function ResultsPanel({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <Card className="flex flex-col items-center py-8 relative">
           <div className="absolute top-4 right-4">
+            <Tooltip content="Structural integrity assessment from the Nexus RandomForest model.">
+              <Info className="h-3 w-3 text-zinc-700" />
+            </Tooltip>
+          </div>
+          <ScoreGauge
+            value={data.score.model}
+            label="Model Score"
+            color="#3b82f6"
+          />
+          <p className="mt-4 font-mono text-[10px] text-zinc-600 uppercase">
+            Structural Integrity
+          </p>
+        </Card>
+
+        <Card className="flex flex-col items-center py-8 relative">
+          <div className="absolute top-4 right-4">
             <Tooltip content="NLP sentiment analysis and linguistic affinity matching.">
               <Info className="h-3 w-3 text-zinc-700" />
             </Tooltip>
@@ -404,21 +399,6 @@ function ResultsPanel({
           />
           <p className="mt-4 font-mono text-[10px] text-zinc-600 uppercase">
             Brand Affinity & Sentiment
-          </p>
-        </Card>
-        <Card className="flex flex-col items-center py-8 relative">
-          <div className="absolute top-4 right-4">
-            <Tooltip content="Real-time search momentum and keyword velocity from Google Trends API.">
-              <Info className="h-3 w-3 text-zinc-700" />
-            </Tooltip>
-          </div>
-          <ScoreGauge
-            value={data.score.trend}
-            label="Trend Momentum"
-            color="#06b6d4"
-          />
-          <p className="mt-4 font-mono text-[10px] text-zinc-600 uppercase">
-            Search Trends & Momentum
           </p>
         </Card>
       </div>
@@ -433,70 +413,104 @@ function ResultsPanel({
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-zinc-300">
               <User className="h-4 w-4 text-purple-400" />
-              Peer-to-Peer Ownership Intelligence
+              Ownership & Registrar Intelligence
             </div>
             <div className="flex items-center gap-3">
+              {data.ownership?.registered !== undefined && (
+                <Badge 
+                  variant={data.ownership.registered ? "outline" : "positive"}
+                  className={cn("font-mono", data.ownership.registered ? "border-amber-500/50 text-amber-500" : "border-green-500/50 text-green-500")}
+                >
+                  {data.ownership.registered ? "Registered" : "Available"}
+                </Badge>
+              )}
               {data.ownership?.isVerified && (
                 <Badge variant="positive" className="flex items-center gap-1">
                   <ShieldCheck className="h-3 w-3" /> Verified Nexus Seller
                 </Badge>
               )}
-              <Tooltip content="Verified Peer-to-Peer registry data retrieved via global RDAP/WHOIS protocols.">
+              <Tooltip content="Domain intelligence retrieved via global WHOIS/RDAP protocols.">
                 <Info className="h-3.5 w-3.5 text-zinc-600 cursor-help" />
               </Tooltip>
             </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="space-y-4">
+              {/* Ownership Snapshot */}
               <div className="p-5 rounded-xl border border-zinc-800 bg-zinc-900/50">
-                <h4 className="font-mono text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">
+                <h4 className="font-mono text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4">
                   Ownership Snapshot
                 </h4>
                 <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="font-mono text-[11px] text-zinc-600 uppercase">
-                      Owner
-                    </span>
-                    <span className="font-mono text-sm text-white">
-                      {data.ownership?.ownerName || "Redacted"}
-                    </span>
+                  <div className="flex justify-between items-center">
+                    <span className="font-mono text-[11px] text-zinc-600 uppercase">Owner</span>
+                    <span className="font-mono text-sm text-white font-medium">{data.ownership?.ownerName || "Redacted"}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="font-mono text-[11px] text-zinc-600 uppercase">
-                      Location
-                    </span>
-                    <span className="font-mono text-sm text-white">
-                      {data.ownership?.country || "Unknown"}
-                    </span>
+                  {data.ownership?.ownerEmail && (
+                    <div className="flex justify-between items-center">
+                      <span className="font-mono text-[11px] text-zinc-600 uppercase">Owner Email</span>
+                      <a href={`mailto:${data.ownership.ownerEmail}`} className="font-mono text-sm text-blue-400 hover:text-blue-300 transition-colors truncate ml-4">
+                        {data.ownership.ownerEmail}
+                      </a>
+                    </div>
+                  )}
+                  {data.ownership?.ownerPhone && (
+                    <div className="flex justify-between items-center">
+                      <span className="font-mono text-[11px] text-zinc-600 uppercase">Owner Phone</span>
+                      <a href={`tel:${data.ownership.ownerPhone}`} className="font-mono text-sm text-zinc-400 hover:text-white transition-colors">
+                        {data.ownership.ownerPhone}
+                      </a>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center">
+                    <span className="font-mono text-[11px] text-zinc-600 uppercase">Location</span>
+                    <span className="font-mono text-sm text-white">{data.ownership?.country || data.ownership?.organization || "Unknown"}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="font-mono text-[11px] text-zinc-600 uppercase">
-                      Last WHOIS Update
-                    </span>
-                    <span className="font-mono text-sm text-zinc-400">
-                      {data.ownership?.lastUpdated
-                        ? new Date(
-                            data.ownership.lastUpdated,
-                          ).toLocaleDateString()
-                        : "N/A"}
+                  <div className="flex justify-between items-center">
+                    <span className="font-mono text-[11px] text-zinc-600 uppercase">Last Sync</span>
+                    <span className="font-mono text-sm text-zinc-500">
+                      {data.ownership?.lastUpdated ? new Date(data.ownership.lastUpdated).toLocaleDateString() : "N/A"}
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 p-3 bg-blue-500/5 border border-blue-500/10 rounded-lg">
-                <Globe className="h-4 w-4 text-blue-400" />
-                <p className="font-mono text-[10px] text-blue-300/80 italic">
-                  Data retrieved via secure RDAP/WHOIS protocol.
-                </p>
+              {/* Registrar Data */}
+              <div className="p-5 rounded-xl border border-zinc-800 bg-zinc-900/50">
+                <h4 className="font-mono text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4">
+                  Registrar Infrastructure
+                </h4>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="font-mono text-[11px] text-zinc-600 uppercase">Provider</span>
+                    <span className="font-mono text-sm text-white">{data.ownership?.registrarName || "Internal Nexus"}</span>
+                  </div>
+                  {data.ownership?.registrarEmail && (
+                    <div className="flex justify-between items-center">
+                      <span className="font-mono text-[11px] text-zinc-600 uppercase">Registrar Email</span>
+                      <a href={`mailto:${data.ownership.registrarEmail}`} className="font-mono text-sm text-blue-400/80 hover:text-blue-300 transition-colors truncate ml-4">
+                        {data.ownership.registrarEmail}
+                      </a>
+                    </div>
+                  )}
+                  {data.ownership?.registrarPhone && (
+                    <div className="flex justify-between items-center">
+                      <span className="font-mono text-[11px] text-zinc-600 uppercase">Registrar Phone</span>
+                      <a href={`tel:${data.ownership.registrarPhone}`} className="font-mono text-sm text-zinc-400 hover:text-white transition-colors">
+                        {data.ownership.registrarPhone}
+                      </a>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
-            <div className="flex flex-col justify-center">
+            <div className="flex flex-col justify-center min-h-[200px]">
               {isNexusOwned ? (
-                <div className="p-6 rounded-xl border border-purple-500/20 bg-purple-500/5 text-center relative">
+                <div className="p-8 rounded-xl border border-purple-500/20 bg-purple-500/5 text-center relative overflow-hidden group">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-purple-500 to-transparent opacity-50" />
                   <div className="absolute top-3 right-3">
                     <Tooltip content="Immutable Nexus Ledger for verified seller listings and bid history.">
                       <Info className="h-3 w-3 text-purple-400/50" />
@@ -504,15 +518,15 @@ function ResultsPanel({
                   </div>
                   {data.ownership?.isForSale ? (
                     <>
-                      <p className="font-mono text-[10px] text-purple-400 uppercase tracking-widest mb-1">
+                      <p className="font-mono text-[10px] text-purple-400 uppercase tracking-widest mb-2">
                         Nexus Listed Asking Price
                       </p>
-                      <p className="font-mono text-3xl font-bold text-white tracking-tighter mb-6">
-                        ${data.ownership.askingPrice?.toLocaleString()}
+                      <p className="font-mono text-4xl font-bold text-white tracking-tighter mb-8">
+                        ₹{data.ownership.askingPrice?.toLocaleString("en-IN")}
                       </p>
                       <Button
                         onClick={() => onContact(data.domain)}
-                        className="w-full bg-purple-600 hover:bg-purple-700 text-white font-mono text-xs h-12 shadow-lg shadow-purple-900/20"
+                        className="w-full bg-purple-600 hover:bg-purple-500 text-white font-mono text-xs h-12 shadow-lg shadow-purple-900/20 group-hover:scale-[1.02] transition-transform"
                       >
                         <Handshake className="h-4 w-4 mr-2" />
                         Initiate P2P Negotiation
@@ -520,16 +534,19 @@ function ResultsPanel({
                     </>
                   ) : (
                     <>
+                      <div className="h-14 w-14 rounded-full bg-purple-500/10 flex items-center justify-center mx-auto mb-4 border border-purple-500/20">
+                        <Handshake className="h-6 w-6 text-purple-400" />
+                      </div>
                       <p className="font-mono text-sm font-bold text-white mb-2 uppercase">
                         Verified Member Asset
                       </p>
-                      <p className="font-mono text-[11px] text-zinc-500 mb-6">
+                      <p className="font-mono text-[11px] text-zinc-500 mb-8 leading-relaxed max-w-[240px] mx-auto">
                         This asset is not actively listed, but the owner is a
-                        Nexus member. You can send a direct buyout proposal.
+                        Nexus member. Secure negotiation is possible.
                       </p>
                       <Button
                         onClick={() => onContact(data.domain)}
-                        className="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-mono text-xs h-12"
+                        className="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-mono text-xs h-12 border border-zinc-700"
                       >
                         <MessageSquare className="h-4 w-4 mr-2" />
                         Send Buyout Proposal
@@ -538,14 +555,15 @@ function ResultsPanel({
                   )}
                 </div>
               ) : (
-                <div className="p-6 rounded-xl border border-zinc-800 bg-zinc-900/50 text-center">
-                  <div className="h-12 w-12 rounded-full bg-zinc-800 flex items-center justify-center mx-auto mb-4">
-                    <Lock className="h-5 w-5 text-zinc-500" />
+                <div className="p-8 rounded-xl border border-zinc-800 bg-zinc-900/50 text-center relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-zinc-800" />
+                  <div className="h-14 w-14 rounded-full bg-zinc-800 flex items-center justify-center mx-auto mb-5">
+                    <Lock className="h-6 w-6 text-zinc-500" />
                   </div>
                   <p className="font-mono text-sm font-bold text-white mb-2 uppercase">
                     External Asset
                   </p>
-                  <p className="font-mono text-[11px] text-zinc-500 mb-6 leading-relaxed">
+                  <p className="font-mono text-[11px] text-zinc-500 mb-8 leading-relaxed max-w-[240px] mx-auto">
                     This domain owner is not a verified Nexus member. Direct
                     peer-to-peer negotiation is currently restricted.
                   </p>
@@ -556,9 +574,9 @@ function ResultsPanel({
                         ? removeFromWatchlist(data.domain)
                         : addToWatchlist(data.domain)
                     }
-                    className="w-full font-mono text-xs border-zinc-700 text-zinc-300"
+                    className="w-full font-mono text-xs border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800 h-12"
                   >
-                    {inWatchlist ? "Watching Asset" : "Monitor for Listing"}
+                    {inWatchlist ? "Monitoring Asset" : "Watch for Listing"}
                   </Button>
                 </div>
               )}
@@ -566,65 +584,6 @@ function ResultsPanel({
           </div>
         </CardContent>
       </Card>
-
-      {/* ML Appraisal Summary — replaces null overall score gauge */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-        <Card className="flex flex-col items-center py-8 relative">
-          <div className="absolute top-4 right-4">
-            <Tooltip content="NLP sentiment analysis and linguistic affinity matching.">
-              <Info className="h-3 w-3 text-zinc-700" />
-            </Tooltip>
-          </div>
-          <ScoreGauge
-            value={data.score.semantic}
-            label="Semantic Score"
-            color="#8b5cf6"
-          />
-          <p className="mt-4 font-mono text-[10px] text-zinc-600 uppercase tracking-widest text-center">
-            Brand Affinity
-          </p>
-        </Card>
-
-        <Card className="flex flex-col items-center py-8 relative">
-          <div className="absolute top-4 right-4">
-            <Tooltip content="Real-time search momentum from Google Trends.">
-              <Info className="h-3 w-3 text-zinc-700" />
-            </Tooltip>
-          </div>
-          <ScoreGauge
-            value={data.score.trend}
-            label="Trend Momentum"
-            color="#06b6d4"
-          />
-          <p className="mt-4 font-mono text-[10px] text-zinc-600 uppercase tracking-widest text-center">
-            Search Momentum
-          </p>
-        </Card>
-
-        {/* Negotiation context: tier + price */}
-        <Card className="flex flex-col items-center justify-center py-8 px-5 gap-4 relative">
-          <div className="absolute top-4 right-4">
-            <Tooltip content="ML tier and price estimate — useful context for setting a negotiation floor.">
-              <Info className="h-3 w-3 text-zinc-700" />
-            </Tooltip>
-          </div>
-          <BarChart2 className="h-6 w-6 text-purple-400" strokeWidth={1.5} />
-          <div className="text-center">
-            <p className="font-mono text-[9px] text-zinc-500 uppercase tracking-widest mb-1">
-              Negotiation Floor
-            </p>
-            <p className={cn("font-mono text-xl font-bold uppercase", tierColor(data.appraisal?.predictedTier))}>
-              {data.appraisal?.predictedTier ?? "—"}
-            </p>
-            <p className="font-mono text-xs text-blue-400 font-semibold mt-1">
-              ₹{data.appraisal?.predictedPrice?.toLocaleString("en-IN") ?? "—"}
-            </p>
-            <p className="font-mono text-[9px] text-zinc-600 mt-1 uppercase">
-              ML estimate
-            </p>
-          </div>
-        </Card>
-      </div>
     </div>
   );
 
@@ -652,20 +611,18 @@ function ResultsPanel({
                 <h2 className="font-mono text-xl font-bold text-white tracking-tight uppercase">
                   {data.domain}
                 </h2>
-                <GradeBadge grade={data.score.grade} />
-                <Badge variant="default" className="font-mono text-[10px]">
-                  Trust: {(data.score.confidence * 100).toFixed(0)}%
-                </Badge>
-                <Badge
-                  variant="outline"
-                  className={cn("font-mono text-[10px] border", tierBorderColor(data.appraisal?.predictedTier))}
-                >
-                  <span className={tierColor(data.appraisal?.predictedTier)}>
-                    {data.appraisal?.predictedTier
-                      ? `${data.appraisal.predictedTier.charAt(0).toUpperCase() + data.appraisal.predictedTier.slice(1)} Tier`
-                      : "Unrated"}
-                  </span>
-                </Badge>
+                {mode === "appraisal" && (
+                  <Badge
+                    variant="outline"
+                    className={cn("font-mono text-[10px] border", tierBorderColor(data.appraisal?.predictedTier))}
+                  >
+                    <span className={tierColor(data.appraisal?.predictedTier)}>
+                      {data.appraisal?.predictedTier
+                        ? `${data.appraisal.predictedTier.charAt(0).toUpperCase() + data.appraisal.predictedTier.slice(1)} Tier`
+                        : "Unrated"}
+                    </span>
+                  </Badge>
+                )}
               </div>
               <p className="font-mono text-[11px] text-zinc-500 leading-relaxed max-w-3xl">
                 {data.summary}
@@ -742,10 +699,25 @@ export default function TerminalPage() {
   const runQuery = useCallback(
     async (domain: string) => {
       const clean = sanitizeDomain(domain);
-      if (!clean || !clean.includes(".")) {
+      const parts = clean.split(".");
+      const tld = parts.length > 1 ? `.${parts.slice(1).join(".")}` : "";
+      const ALLOWED_TLDS = [
+        ".com", ".net", ".org", ".in", ".co.in", ".io", ".ai", ".co", ".dev", ".app", ".info", ".biz", ".tech", ".xyz", ".online", ".site",
+        ".shop", ".store", ".blog", ".life", ".world", ".global", ".cloud", ".digital", ".agency", ".solutions", ".network", ".software", ".media", ".services",
+        ".me", ".us", ".co.uk", ".ca", ".de", ".fr", ".jp", ".au", ".ru", ".ch", ".it", ".nl", ".se", ".no", ".es", ".br", ".mx", ".at", ".be", ".dk", ".fi", ".pt", ".pl", ".tr", ".kr", ".tw", ".hk", ".sg", ".my", ".th", ".id", ".ph", ".vn", ".ae", ".sa", ".qa", ".il",
+        ".top", ".test", ".icu", ".vip", ".club", ".win", ".bid", ".click", ".link", ".help", ".work", ".today", ".news", ".live", ".studio", ".design", ".expert", ".marketing", ".consulting", ".legal", ".finance", ".money", ".loan", ".credit", ".bank", ".insurance", ".events", ".party", ".wedding", ".family", ".yoga", ".fitness", ".health", ".clinic", ".doctor", ".hospital", ".vet", ".pet", ".dog", ".cat", ".farm", ".green", ".earth", ".garden", ".eco", ".bio", ".nature", ".space", ".science", ".education", ".academy", ".institute", ".center", ".gov", ".edu"
+      ];
+
+      if (!clean || parts.length < 2) {
         setValidationError("Enter a valid domain (e.g. quantum.ai)");
         return;
       }
+
+      if (!ALLOWED_TLDS.includes(tld)) {
+        setValidationError(`TLD '${tld}' is not currently supported for deep intelligence.`);
+        return;
+      }
+
       setValidationError(null);
       setIsQuerying(true);
       setResult(null);

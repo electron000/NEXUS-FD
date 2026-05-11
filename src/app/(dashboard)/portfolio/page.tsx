@@ -17,6 +17,7 @@ import {
   User as UserIcon,
   Home,
   X,
+  Trash2,
 } from "lucide-react";
 import {
   Card,
@@ -31,7 +32,7 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { useAppStore } from "@/store/useAppStore";
 import { apiClient } from "@/services/config";
-import { submitKYC } from "@/services/user";
+import { submitKYC, deletePortfolioItem } from "@/services/user";
 import { cn } from "@/lib/utils";
 
 interface PortfolioDomain {
@@ -39,6 +40,7 @@ interface PortfolioDomain {
   domain: string;
   is_for_sale: boolean;
   asking_price: number | null;
+  bought_price: number;
   verification_status: "pending" | "verified" | "failed";
   verification_token: string;
   created_at: string;
@@ -47,6 +49,7 @@ interface PortfolioDomain {
 export default function PortfolioPage() {
   const [domains, setDomains] = useState<PortfolioDomain[]>([]);
   const [newDomain, setNewDomain] = useState("");
+  const [boughtPrice, setBoughtPrice] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { userProfile, updateProfile } = useAppStore();
 
@@ -58,6 +61,13 @@ export default function PortfolioPage() {
     "idle",
   );
   const [kycErrorMessage, setKycErrorMessage] = useState("");
+
+  // Shared Action Modal State
+  const [actionModal, setActionModal] = useState<{
+    isOpen: boolean;
+    type: "delete" | "verify_success";
+    domain?: PortfolioDomain;
+  }>({ isOpen: false, type: "delete" });
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -93,22 +103,25 @@ export default function PortfolioPage() {
 
   const handleAddDomain = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newDomain) return;
+    if (!newDomain || !boughtPrice) return;
     setIsSubmitting(true);
     try {
       await apiClient.post("/api/user/portfolio", {
         domain: newDomain.toLowerCase().trim(),
+        boughtPrice: parseFloat(boughtPrice),
       });
       setNewDomain("");
+      setBoughtPrice("");
       fetchPortfolio();
-    } catch {
-      alert("Failed to add domain. It might already be listed.");
+    } catch (err: any) {
+      const msg = err.response?.data?.error || err.message || "Unknown error";
+      alert(`Failed to add domain: ${msg}`);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleVerify = async (domain: string, method: "dns" | "html") => {
+  const handleVerify = async (domain: string, method: "dns") => {
     try {
       const res: { success?: boolean; error?: string } = await apiClient.post(
         "/api/user/portfolio/verify",
@@ -118,7 +131,11 @@ export default function PortfolioPage() {
         },
       );
       if (res.success) {
-        alert("Verification successful!");
+        setActionModal({
+          isOpen: true,
+          type: "verify_success",
+          domain: domains.find((d) => d.domain === domain),
+        });
         fetchPortfolio();
       } else {
         alert(
@@ -127,6 +144,21 @@ export default function PortfolioPage() {
       }
     } catch {
       alert("Technical error during verification.");
+    }
+  };
+
+  const handleDeleteDomain = async (domain: PortfolioDomain) => {
+    setActionModal({ isOpen: true, type: "delete", domain });
+  };
+
+  const confirmDelete = async () => {
+    if (!actionModal.domain) return;
+    try {
+      await deletePortfolioItem(actionModal.domain.id);
+      fetchPortfolio();
+      setActionModal({ ...actionModal, isOpen: false });
+    } catch {
+      alert("Failed to delete domain.");
     }
   };
 
@@ -294,9 +326,22 @@ export default function PortfolioPage() {
                   className="w-full bg-zinc-950 border border-zinc-800 rounded-lg pl-10 pr-4 py-2 font-mono text-sm text-white placeholder-zinc-700 focus:border-blue-500/50 outline-none transition-all"
                 />
               </div>
+              <div className="md:w-48 relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600 font-mono text-sm">₹</span>
+                <input
+                  id="bought-price-input"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={boughtPrice}
+                  onChange={(e) => setBoughtPrice(e.target.value)}
+                  placeholder="Bought Price"
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-lg pl-8 pr-4 py-2 font-mono text-sm text-white placeholder-zinc-700 focus:border-blue-500/50 outline-none transition-all"
+                />
+              </div>
               <Button
                 type="submit"
-                disabled={isSubmitting || !newDomain}
+                disabled={isSubmitting || !newDomain || !boughtPrice}
                 className="font-mono text-xs px-6 w-full md:w-auto"
               >
                 {isSubmitting ? "Adding..." : "Add to Portfolio"}
@@ -382,6 +427,15 @@ export default function PortfolioPage() {
                         )}
                       </div>
 
+                      <div className="flex flex-col items-center">
+                        <span className="font-mono text-[9px] text-zinc-700 uppercase mb-1">
+                          Bought Price
+                        </span>
+                        <span className="font-mono text-sm font-bold text-white">
+                          ₹{parseFloat(String(d.bought_price || 0)).toLocaleString("en-IN")}
+                        </span>
+                      </div>
+
                       {d.verification_status !== "verified" && (
                         <div className="p-3 bg-zinc-950 border border-zinc-800 rounded-lg flex items-center gap-4">
                           <div>
@@ -401,17 +455,20 @@ export default function PortfolioPage() {
                             >
                               Verify DNS
                             </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-7 font-mono text-[10px]"
-                              onClick={() => handleVerify(d.domain, "html")}
-                            >
-                              Verify HTML
-                            </Button>
                           </div>
                         </div>
                       )}
+
+                      <div className="flex items-center">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteDomain(d)}
+                          className="text-zinc-600 hover:text-red-400 hover:bg-red-400/10 transition-all h-8 w-8"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
@@ -737,6 +794,72 @@ export default function PortfolioPage() {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+      )}
+      {/* Action Modal (Delete / Verify Success) */}
+      {actionModal.isOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="w-full max-w-md bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden p-6 text-center">
+            {actionModal.type === "delete" ? (
+              <>
+                <div className="h-16 w-16 bg-red-500/10 border border-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Trash2 className="h-8 w-8 text-red-500" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">
+                  Remove Domain?
+                </h3>
+                <p className="text-zinc-400 text-sm font-mono mb-6">
+                  {actionModal.domain?.verification_status === "verified" ? (
+                    <span className="text-amber-500 font-bold">
+                      Warning: This is a verified asset. Removing it will delete
+                      all historical intelligence data.
+                    </span>
+                  ) : (
+                    `Are you sure you want to remove ${actionModal.domain?.domain} from your portfolio?`
+                  )}
+                </p>
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    className="flex-1 border-zinc-800 text-zinc-400 hover:text-white"
+                    onClick={() =>
+                      setActionModal({ ...actionModal, isOpen: false })
+                    }
+                  >
+                    No, Keep it
+                  </Button>
+                  <Button
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                    onClick={confirmDelete}
+                  >
+                    Yes, Remove
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="h-16 w-16 bg-green-500/10 border border-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle2 className="h-8 w-8 text-green-500" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">
+                  Asset Verified
+                </h3>
+                <p className="text-zinc-400 text-sm font-mono mb-6">
+                  Success! <span className="text-white">{actionModal.domain?.domain}</span> has
+                  been cryptographically verified. It is now visible to the
+                  NEXUS institutional engine.
+                </p>
+                <Button
+                  className="w-full bg-zinc-800 text-white hover:bg-zinc-700"
+                  onClick={() =>
+                    setActionModal({ ...actionModal, isOpen: false })
+                  }
+                >
+                  Continue to Dashboard
+                </Button>
+              </>
+            )}
           </div>
         </div>
       )}

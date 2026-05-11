@@ -6,9 +6,9 @@
 // --- Session & Identity ---
 export type LoadingPhase =
   | "idle"
-  | "Scraping Registrars..."
-  | "Analyzing Linguistics..."
-  | "Ownership Analysis..."
+  | "Scanning Ecosystem..."
+  | "Core Processing..."
+  | "Ownership Audit..."
   | "Synthesizing Intelligence..."
   | "complete";
 
@@ -29,11 +29,8 @@ export interface UserProfile {
 // --- Intelligence & Valuation ---
 export interface NexusValueScore {
   overall: number;
-  quantitative: number;
+  model: number;
   semantic: number;
-  trend: number;
-  confidence: number;
-  grade: "S" | "A" | "B" | "C" | "D" | "F";
 }
 
 export interface RegistrarPricing {
@@ -53,16 +50,21 @@ export interface OwnershipInfo {
   isNexusMember: boolean;
   isVerified: boolean;
   ownerName?: string;
+  ownerEmail?: string;
+  ownerPhone?: string;
   organization?: string;
   country?: string;
+  registrarName?: string;
+  registrarEmail?: string;
+  registrarPhone?: string;
   isForSale?: boolean;
   askingPrice?: number;
   lastUpdated: string;
+  registered?: boolean;
 }
 
 export interface AppraisalInfo {
   value: number;
-  confidence: number;
   tier: 'Premium' | 'Investment' | 'Standard' | 'high' | 'medium' | 'low';
   predictedPrice?: number;
   predictedTier?: string;
@@ -99,20 +101,17 @@ export interface DashboardMetric {
   suffix?: string;
 }
 
+export interface PortfolioDomain {
+  domain: string;
+  boughtPrice: number;
+  valuation: number;
+  growth: number;
+}
+
 export interface DashboardMetrics {
   portfolioValue: DashboardMetric;
   activeDomains: DashboardMetric;
-  monthlyRevenue: DashboardMetric;
-  watchlistSize: DashboardMetric;
+  totalInvested: DashboardMetric;
+  portfolio: PortfolioDomain[];
 }
 
-// --- Direct Score Proxy (Legacy/Direct) ---
-export interface NexusScoreResponse {
-  domain: string;
-  quantitative_baseline: number;
-  semantic_score: number;
-  trend_momentum: number;
-  predicted_price?: number;
-  predicted_tier?: string;
-  model_used: string;
-}

@@ -8,6 +8,8 @@ import type { DashboardMetrics } from "@/types";
 import { useAppStore } from "@/store/useAppStore";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { PortfolioTable } from "./PortfolioTable";
+
 // ---------------------------------------------------------------------------
 // LiveClock
 // ---------------------------------------------------------------------------
@@ -49,7 +51,7 @@ function formatValue(v: number | string, prefix?: string, suffix?: string) {
     v >= 100000
       ? `${(v / 1000).toFixed(1)}K`
       : v >= 1000
-        ? v.toLocaleString("en-US", { maximumFractionDigits: 0 })
+        ? v.toLocaleString("en-IN", { maximumFractionDigits: 0 })
         : v.toFixed(2);
   return `${prefix ?? ""}${formatted}${suffix ?? ""}`;
 }
@@ -172,8 +174,7 @@ export default function OverviewPage() {
   const metricList = [
     metrics.portfolioValue,
     metrics.activeDomains,
-    metrics.monthlyRevenue,
-    metrics.watchlistSize,
+    metrics.totalInvested,
   ];
 
   return (
@@ -205,11 +206,14 @@ export default function OverviewPage() {
       </div>
 
       {/* Metric cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {metricList.map((m, i) => (
           <MetricCard key={m.label} {...m} delay={i * 0.08} />
         ))}
       </div>
+
+      {/* Portfolio Table */}
+      <PortfolioTable data={metrics.portfolio} />
     </div>
   );
 }
