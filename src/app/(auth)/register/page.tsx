@@ -1,14 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Loader2, UserPlus } from "lucide-react";
+import { Loader2, UserPlus, CheckCircle2, Mail, ShieldCheck } from "lucide-react";
 import { useAppStore } from "@/store/useAppStore";
-import { signupUser } from "@/services/auth";
+import { signupUser, sendOTP, verifyOTP } from "@/services/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -36,18 +36,85 @@ type RegisterForm = z.infer<typeof registerSchema>;
 export default function RegisterPage() {
   const router = useRouter();
   const login = useAppStore((s) => s.login);
+  
+  // Registration States
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // OTP States
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [showOtpInput, setShowOtpInput] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
+  const [isOtpSending, setIsOtpSending] = useState(false);
+  const [isOtpVerifying, setIsOtpVerifying] = useState(false);
 
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
   });
 
+  const emailValue = watch("email");
+
+  // Auto-verify OTP when 6 digits are reached
+  useEffect(() => {
+    if (otpCode.length === 6 && !isEmailVerified) {
+      handleVerifyOTP();
+    }
+  }, [otpCode]);
+
+  async function handleSendOTP() {
+    if (!emailValue || errors.email) {
+      setError("Please enter a valid email address first.");
+      return;
+    }
+
+    setIsOtpSending(true);
+    setError(null);
+
+    try {
+      const result = await sendOTP(emailValue);
+      if (result.success) {
+        setShowOtpInput(true);
+      } else {
+        setError(result.message);
+      }
+    } catch (err) {
+      setError("Failed to send verification code.");
+    } finally {
+      setIsOtpSending(false);
+    }
+  }
+
+  async function handleVerifyOTP() {
+    setIsOtpVerifying(true);
+    setError(null);
+
+    try {
+      const result = await verifyOTP(emailValue, otpCode);
+      if (result.success) {
+        setIsEmailVerified(true);
+        setShowOtpInput(false);
+      } else {
+        setError(result.message);
+      }
+    } catch (err) {
+      setError("Verification failed. Please check the code.");
+    } finally {
+      setIsOtpVerifying(false);
+    }
+  }
+
   async function onSubmit(data: RegisterForm) {
+    if (!isEmailVerified) {
+      setError("Please verify your email first.");
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -59,19 +126,16 @@ export default function RegisterPage() {
         return;
       }
 
-      // ADDED: Type guard to ensure result.user is defined
       if (!result.user) {
-        setError("Registration succeeded, but user profile data is missing. Please contact support.");
+        setError("Registration succeeded, but user profile data is missing.");
         return;
       }
 
-      // Update store with real auth data safely
       login(result.user);
       router.push("/overview");
       
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Registration failed. Please try again.";
-      setError(errorMessage);
+      setError(err instanceof Error ? err.message : "Registration failed.");
     } finally {
       setIsLoading(false);
     }
@@ -93,53 +157,121 @@ export default function RegisterPage() {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {/* Name */}
-        <div>
+        
+        {/* Email Field with Verify Trigger */}
+        <div className="relative">
           <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-widest text-zinc-500">
-            Full Name
+            Email Address
           </label>
-          <Input
-            id="register-name"
-            type="text"
-            placeholder="Alex Morgan"
-            {...register("name")}
-            className="w-full"
-          />
-          {errors.name && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.name.message}</p>}
-        </div>
-
-        {/* Email */}
-        <div>
-          <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-widest text-zinc-500">
-            Email
-          </label>
-          <Input
-            id="register-email"
-            type="email"
-            placeholder="you@fund.com"
-            autoComplete="email"
-            {...register("email")}
-            className="w-full"
-          />
+          <div className="relative flex items-center">
+            <Input
+              id="register-email"
+              type="email"
+              placeholder="you@fund.com"
+              autoComplete="email"
+              {...register("email")}
+              disabled={isEmailVerified || isOtpSending}
+              className={`w-full pr-20 ${isEmailVerified ? 'border-emerald-500/50 bg-emerald-500/5 text-zinc-300' : ''}`}
+            />
+            
+            <div className="absolute right-3">
+              {isEmailVerified ? (
+                <div className="flex items-center gap-1.5 text-emerald-400 font-mono text-[10px] uppercase tracking-wider font-bold">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  Verified
+                </div>
+              ) : (
+                emailValue && !errors.email && (
+                  <button
+                    type="button"
+                    onClick={handleSendOTP}
+                    disabled={isOtpSending}
+                    className="text-blue-400 hover:text-blue-300 font-mono text-[10px] uppercase tracking-wider font-bold transition-colors disabled:opacity-50"
+                  >
+                    {isOtpSending ? <Loader2 className="h-3 w-3 animate-spin" /> : "Verify"}
+                  </button>
+                )
+              )}
+            </div>
+          </div>
           {errors.email && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.email.message}</p>}
         </div>
 
-        {/* Password */}
-        <div>
-          <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-widest text-zinc-500">
-            Password
-          </label>
-          <Input
-            id="register-password"
-            type="password"
-            placeholder="Min 8 chars, 1 uppercase, 1 number"
-            autoComplete="new-password"
-            {...register("password")}
-            className="w-full"
-          />
-          {errors.password && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.password.message}</p>}
-        </div>
+        {/* OTP Input Section */}
+        {showOtpInput && !isEmailVerified && (
+          <div className="space-y-3 p-4 rounded-lg border border-blue-500/20 bg-blue-500/5 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div>
+              <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-widest text-blue-400">
+                Verification Code
+              </label>
+              <Input
+                id="register-otp"
+                type="text"
+                maxLength={6}
+                placeholder="000000"
+                value={otpCode}
+                onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, ""))}
+                className="w-full text-center tracking-[1em] font-bold text-lg"
+              />
+              <div className="mt-2 flex justify-between items-center">
+                <p className="font-mono text-[10px] text-zinc-500 italic">
+                  Check your email for the 6-digit code.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleSendOTP}
+                  className="font-mono text-[10px] text-blue-400 hover:underline transition-all"
+                >
+                  Resend Code
+                </button>
+              </div>
+            </div>
+            {isOtpVerifying && (
+              <div className="flex items-center justify-center gap-2 font-mono text-[10px] text-blue-400">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Authenticating...
+              </div>
+            )}
+          </div>
+        )}
 
+        {/* Progressive Disclosure: Name & Password */}
+        {isEmailVerified && (
+          <div className="space-y-4 animate-in fade-in slide-in-from-top-4 duration-500">
+            <div className="pt-2 border-t border-zinc-800/50 my-4" />
+            
+            {/* Name */}
+            <div>
+              <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-widest text-zinc-500">
+                Full Name
+              </label>
+              <Input
+                id="register-name"
+                type="text"
+                placeholder="Alex Morgan"
+                {...register("name")}
+                className="w-full"
+              />
+              {errors.name && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.name.message}</p>}
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-widest text-zinc-500">
+                Security Password
+              </label>
+              <Input
+                id="register-password"
+                type="password"
+                placeholder="••••••••"
+                autoComplete="new-password"
+                {...register("password")}
+                className="w-full"
+              />
+              {errors.password && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.password.message}</p>}
+            </div>
+          </div>
+        )}
 
         {error && (
           <div className="rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-3">
@@ -150,19 +282,25 @@ export default function RegisterPage() {
         <Button
           id="register-submit"
           type="submit"
-          disabled={isLoading}
-          className="w-full h-11 font-mono text-sm mt-2"
+          disabled={isLoading || !isEmailVerified}
+          className={`w-full h-11 font-mono text-sm mt-4 transition-all duration-500 ${
+            isEmailVerified 
+              ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/20' 
+              : 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-700'
+          }`}
         >
           {isLoading ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              Creating Profile...
+              Initializing Terminal...
+            </>
+          ) : isEmailVerified ? (
+            <>
+              <ShieldCheck className="h-4 w-4" />
+              Activate Access
             </>
           ) : (
-            <>
-              <UserPlus className="h-4 w-4" />
-              Activate Terminal Access
-            </>
+            "Verify Email to Continue"
           )}
         </Button>
       </form>

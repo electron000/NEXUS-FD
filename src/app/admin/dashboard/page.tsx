@@ -44,6 +44,7 @@ import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { useAppStore } from "@/store/useAppStore";
 import { logoutUser, getCurrentUser } from "@/services/auth";
+import { toast } from "sonner";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
@@ -128,18 +129,19 @@ function AdminDashboard() {
         status,
         status === "rejected" ? rejectionReason : undefined,
       );
+      toast.success(`KYC ${status === "verified" ? "Approved" : "Rejected"} successfully`);
       fetchData();
       setSelectedKyc(null);
       setRejectionReason("");
     } catch {
-      alert("Review action failed");
+      toast.error("Review action failed");
     }
   };
 
   const handleLogout = async () => {
     await logoutUser();
     logout();
-    router.push("/admin/login");
+    router.push("/");
   };
 
   if (loading) {

@@ -21,7 +21,7 @@ export const ROUTES = {
     PORTFOLIO: "/portfolio", // Asset Management
     KYC: "/kyc", // Seller Verification
     WATCHLIST: "/watchlist", // Tracked Assets
-    SETTINGS: "/settings", // User Preferences
+    MESSAGES: "/messages",
   },
 
   // --- Administrative Routes (Requires is_admin: true) ---

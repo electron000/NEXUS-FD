@@ -8,16 +8,20 @@ export const getSocket = (token?: string): Socket => {
     socket = io(API_BASE_URL, {
       auth: { token },
       withCredentials: true,
-      autoConnect: false,
+      autoConnect: true,
+      transports: ['websocket', 'polling']
     });
+    
+    socket.on('connect', () => console.log('Socket connected:', socket?.id));
+    socket.on('connect_error', (err) => console.error('Socket connect error:', err));
   }
   return socket!;
 };
 
-export const connectSocket = (token: string) => {
+export const connectSocket = (token?: string) => {
   const s = getSocket(token);
   if (!s.connected) {
-    s.auth = { token };
+    if (token) s.auth = { token };
     s.connect();
   }
 };

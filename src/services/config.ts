@@ -42,13 +42,19 @@ apiClient.interceptors.response.use(
     
     // EDGE CASE: Handle Session Expiration (401)
     if (status === 401 && typeof window !== 'undefined') {
-      // Clear localStorage and reload to trigger guards
-      localStorage.removeItem('nexus_user');
-      localStorage.removeItem('nexus-terminal-store'); // Clear Zustand persisted state
-      
-      // We don't use router here to avoid hooks outside components
-      // A full reload ensures all states are reset cleanly
-      window.location.href = '/login?expired=true';
+      // Don't redirect if we're already trying to log in or on a login page
+      const isLoginRequest = error.config?.url?.includes('/auth/login');
+      const isLoginPage = window.location.pathname.includes('/login');
+
+      if (!isLoginRequest && !isLoginPage) {
+        // Clear localStorage and reload to trigger guards
+        localStorage.removeItem('nexus_user');
+        localStorage.removeItem('nexus-terminal-store'); // Clear Zustand persisted state
+        
+        // We don't use router here to avoid hooks outside components
+        // A full reload ensures all states are reset cleanly
+        window.location.href = '/login?expired=true';
+      }
     }
 
     throw new APIError(status, message, data);

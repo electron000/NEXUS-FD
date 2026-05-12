@@ -2,12 +2,13 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Clock, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { Clock, TrendingUp, TrendingDown, Minus, ShieldCheck, AlertCircle } from "lucide-react";
 import { getDashboardMetrics as getRealDashboardMetrics } from "@/services";
 import type { DashboardMetrics } from "@/types";
 import { useAppStore } from "@/store/useAppStore";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { PortfolioTable } from "./PortfolioTable";
 
 // ---------------------------------------------------------------------------
@@ -113,6 +114,74 @@ function MetricCard({
   );
 }
 
+function DashboardSkeleton() {
+  return (
+    <div className="max-w-7xl mx-auto space-y-8 py-4">
+      {/* Header Skeleton */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800/50 pb-6">
+        <div className="space-y-3">
+          <Skeleton className="h-7 w-48 bg-zinc-900" />
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-4 w-32 bg-zinc-900" />
+            <Skeleton className="h-4 w-20 bg-zinc-900" />
+          </div>
+        </div>
+        <Skeleton className="h-6 w-24 bg-zinc-900 rounded-full" />
+      </div>
+
+      {/* Cards Skeleton */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[0, 1, 2].map((i) => (
+          <Card key={i} className="border-zinc-800/50 bg-zinc-950/50">
+            <CardHeader className="pb-2">
+              <Skeleton className="h-3 w-24 bg-zinc-900" />
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col gap-3 mt-1">
+                <Skeleton className="h-9 w-32 bg-zinc-900" />
+                <Skeleton className="h-3 w-16 bg-zinc-900" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Table Skeleton Placeholder */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between px-2">
+          <Skeleton className="h-3 w-48 bg-zinc-900" />
+          <Skeleton className="h-3 w-32 bg-zinc-900" />
+        </div>
+        <Card className="border-zinc-800/50 bg-zinc-950/50 overflow-hidden">
+          <div className="p-0">
+            <div className="border-b border-zinc-800/50 bg-zinc-900/30 p-4 flex justify-between">
+              {[0, 1, 2, 3, 4].map((i) => (
+                <Skeleton key={i} className="h-3 w-20 bg-zinc-800/50" />
+              ))}
+            </div>
+            <div className="p-4 space-y-6">
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-8 w-8 rounded bg-zinc-900" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-32 bg-zinc-900" />
+                      <Skeleton className="h-2 w-20 bg-zinc-900" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-4 w-20 bg-zinc-900" />
+                  <Skeleton className="h-4 w-20 bg-zinc-900" />
+                  <Skeleton className="h-6 w-16 bg-zinc-900 rounded-full" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Overview Page
 // ---------------------------------------------------------------------------
@@ -120,20 +189,32 @@ function MetricCard({
 export default function OverviewPage() {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { isLoggedIn } = useAppStore();
+  const { isLoggedIn, userProfile, updateProfile } = useAppStore();
 
   const loadMetrics = useCallback(async () => {
     if (!isLoggedIn) return;
 
     try {
       const data = await getRealDashboardMetrics();
-      setMetrics(data as DashboardMetrics);
+      const metricsData = data as DashboardMetrics;
+      setMetrics(metricsData);
+
+      // Update store with latest KYC status from metrics
+      if (
+        metricsData.kyc_status &&
+        userProfile?.kyc_status !== metricsData.kyc_status
+      ) {
+        updateProfile({
+          kyc_status: metricsData.kyc_status,
+          kyc_rejection_reason: metricsData.kyc_rejection_reason,
+        });
+      }
     } catch (err) {
       console.warn("Failed to load metrics", err);
     } finally {
       setIsLoading(false);
     }
-  }, [isLoggedIn]);
+  }, [isLoggedIn, userProfile, updateProfile]);
 
   // Initial load
   useEffect(() => {
@@ -162,11 +243,7 @@ export default function OverviewPage() {
   }, [loadMetrics, isLoggedIn]);
 
   if (isLoading && !metrics) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   if (!metrics) return null;
@@ -181,28 +258,38 @@ export default function OverviewPage() {
     <div className="max-w-7xl mx-auto space-y-8 py-4">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800/50 pb-6">
-        <div>
+        <div className="flex items-center gap-4">
           <h1 className="font-mono text-xl font-bold text-white tracking-tighter uppercase">
             Nerve Center
           </h1>
-          <div className="flex items-center gap-3 mt-2">
-            <div className="flex items-center gap-2">
-              <Clock className="h-3 w-3 text-zinc-600" strokeWidth={1.5} />
-              <LiveClock />
-            </div>
-            <span className="text-zinc-800">|</span>
-            <span className="flex items-center gap-1.5 font-mono text-[10px] text-emerald-500 font-bold uppercase tracking-widest">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
-              Live Feed
-            </span>
-          </div>
+          {userProfile?.kyc_status === "verified" && (
+            <Badge
+              variant="outline"
+              className="bg-purple-500/10 border-purple-500/30 text-purple-400 gap-1 rounded-md px-2 py-0.5"
+            >
+              <ShieldCheck className="h-3.5 w-3.5" />
+              Verified Seller
+            </Badge>
+          )}
+          {userProfile?.kyc_status === "pending" && (
+            <Badge
+              variant="outline"
+              className="bg-amber-500/10 border-amber-500/30 text-amber-400 gap-1 rounded-md px-2 py-0.5"
+            >
+              <Clock className="h-3.5 w-3.5" />
+              Verification Pending
+            </Badge>
+          )}
+          {userProfile?.kyc_status === "rejected" && (
+            <Badge
+              variant="outline"
+              className="bg-red-500/10 border-red-500/30 text-red-400 gap-1 rounded-md px-2 py-0.5"
+            >
+              <AlertCircle className="h-3.5 w-3.5" />
+              Rejected
+            </Badge>
+          )}
         </div>
-        <Badge
-          variant="outline"
-          className="font-mono text-[10px] border-zinc-800 text-zinc-600 px-3 py-1 self-start sm:self-auto"
-        >
-          30s refresh
-        </Badge>
       </div>
 
       {/* Metric cards */}

@@ -5,6 +5,7 @@ import { X, Send, IndianRupee, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { apiClient } from "@/services/config";
+import { toast } from "sonner";
 
 interface InquiryModalProps {
   domain: string;
@@ -31,7 +32,7 @@ export function InquiryModal({ domain, onClose }: InquiryModalProps) {
       setTimeout(onClose, 2000);
     } catch (err) {
       console.error("Inquiry error:", err);
-      alert("Failed to send inquiry. Please try again.");
+      toast.error("Failed to send inquiry. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

@@ -20,7 +20,8 @@ export interface UserProfile {
   name: string;
   role: UserRole;
   is_admin: boolean;
-  kyc_status?: 'unverified' | 'pending' | 'verified' | 'rejected';
+   kyc_status?: 'unverified' | 'pending' | 'verified' | 'rejected';
+   kyc_rejection_reason?: string;
   defaultExtensions: string[];
   avatarInitials: string;
   createdAt: string;
@@ -123,6 +124,8 @@ export interface PortfolioDomain {
 }
 
 export interface DashboardMetrics {
+  kyc_status: 'unverified' | 'pending' | 'verified' | 'rejected';
+  kyc_rejection_reason?: string;
   portfolioValue: DashboardMetric;
   activeDomains: DashboardMetric;
   totalInvested: DashboardMetric;

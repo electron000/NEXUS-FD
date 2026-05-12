@@ -18,6 +18,9 @@ import {
   Home,
   X,
   Trash2,
+  Copy,
+  Info,
+  Check,
 } from "lucide-react";
 import {
   Card,
@@ -34,6 +37,7 @@ import { useAppStore } from "@/store/useAppStore";
 import { apiClient } from "@/services/config";
 import { submitKYC, deletePortfolioItem } from "@/services/user";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface PortfolioDomain {
   id: string;
@@ -65,9 +69,17 @@ export default function PortfolioPage() {
   // Shared Action Modal State
   const [actionModal, setActionModal] = useState<{
     isOpen: boolean;
-    type: "delete" | "verify_success";
+    type: "delete" | "verify_success" | "dns_guide";
     domain?: PortfolioDomain;
   }>({ isOpen: false, type: "delete" });
+
+  const [copiedToken, setCopiedToken] = useState<string | null>(null);
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedToken(text);
+    setTimeout(() => setCopiedToken(null), 2000);
+  };
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -104,6 +116,14 @@ export default function PortfolioPage() {
   const handleAddDomain = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newDomain || !boughtPrice) return;
+
+    // Enforcement: Must be a verified seller to list assets
+    if (userProfile?.kyc_status !== "verified") {
+      setStep(0);
+      setIsKycModalOpen(true);
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       await apiClient.post("/api/user/portfolio", {
@@ -112,10 +132,11 @@ export default function PortfolioPage() {
       });
       setNewDomain("");
       setBoughtPrice("");
+      toast.success(`${newDomain.toLowerCase()} added to portfolio`);
       fetchPortfolio();
     } catch (err: any) {
       const msg = err.response?.data?.error || err.message || "Unknown error";
-      alert(`Failed to add domain: ${msg}`);
+      toast.error(`Failed to add domain: ${msg}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -138,12 +159,12 @@ export default function PortfolioPage() {
         });
         fetchPortfolio();
       } else {
-        alert(
+        toast.error(
           res.error || "Verification failed. Ensure records are correctly set.",
         );
       }
     } catch {
-      alert("Technical error during verification.");
+      toast.error("Technical error during verification.");
     }
   };
 
@@ -155,10 +176,11 @@ export default function PortfolioPage() {
     if (!actionModal.domain) return;
     try {
       await deletePortfolioItem(actionModal.domain.id);
+      toast.success("Domain deleted from portfolio");
       fetchPortfolio();
       setActionModal({ ...actionModal, isOpen: false });
     } catch {
-      alert("Failed to delete domain.");
+      toast.error("Failed to delete domain.");
     }
   };
 
@@ -212,7 +234,7 @@ export default function PortfolioPage() {
   const resetModal = () => {
     setIsKycModalOpen(false);
     setTimeout(() => {
-      setStep(1);
+      setStep(0);
       setKycStatus("idle");
     }, 300); // Clear state after transition out
   };
@@ -220,95 +242,94 @@ export default function PortfolioPage() {
   return (
     <>
       <div className="space-y-6">
-        <div>
-          <h1 className="font-mono text-lg font-bold text-white tracking-tight flex items-center gap-3">
-            Marketplace Portfolio
-            {userProfile?.kyc_status === "verified" && (
-              <Badge
-                variant="outline"
-                className="bg-purple-500/10 border-purple-500/30 text-purple-400 gap-1 rounded-md px-2 py-0.5"
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800/50 pb-6">
+          <div>
+            <h1 className="font-mono text-lg font-bold text-white tracking-tight flex items-center gap-3">
+              Sale Portfolio
+              {userProfile?.kyc_status === "verified" && (
+                <Badge
+                  variant="outline"
+                  className="bg-purple-500/10 border-purple-500/30 text-purple-400 gap-1 rounded-md px-2 py-0.5"
+                >
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  Verified Seller
+                </Badge>
+              )}
+              {userProfile?.kyc_status === "pending" && (
+                <Badge
+                  variant="outline"
+                  className="bg-amber-500/10 border-amber-500/30 text-amber-400 gap-1 rounded-md px-2 py-0.5"
+                >
+                  <Clock className="h-3.5 w-3.5" />
+                  Verification Pending
+                </Badge>
+              )}
+              {userProfile?.kyc_status === "rejected" && (
+                <Badge
+                  variant="outline"
+                  className="bg-red-500/10 border-red-500/30 text-red-400 gap-1 rounded-md px-2 py-0.5"
+                >
+                  <AlertCircle className="h-3.5 w-3.5" />
+                  Rejected
+                </Badge>
+              )}
+            </h1>
+            <p className="mt-1 font-mono text-xs text-zinc-600 tracking-widest opacity-70">
+              List and verify your digital assets for the Nexus ecosystem.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 self-start sm:self-auto">
+            {userProfile?.kyc_status !== "verified" && userProfile?.kyc_status !== "pending" && (
+              <button
+                onClick={() => {
+                  setStep(0);
+                  setIsKycModalOpen(true);
+                }}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 hover:border-amber-500/50 transition-all group"
               >
-                <ShieldCheck className="h-3.5 w-3.5" />
-                Verified Seller
-              </Badge>
+                <ShieldCheck className="h-3.5 w-3.5 text-amber-500" />
+                <span className="font-mono text-[10px] font-bold text-amber-500/80 uppercase tracking-[0.2em] group-hover:text-amber-400">
+                  {userProfile?.kyc_status === "rejected" ? "Re-verify Identity" : "Become a Verified Seller"}
+                </span>
+              </button>
             )}
-            <span className="ml-2 text-zinc-600 hidden sm:inline">
-              - Asset Ownership
-            </span>
-          </h1>
-          <p className="mt-1 font-mono text-xs text-zinc-600">
-            List and verify your digital assets for the Nexus ecosystem.
-          </p>
+
+            <button
+              onClick={() => setActionModal({ isOpen: true, type: "dns_guide" })}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900/50 hover:bg-zinc-800 hover:border-zinc-700 transition-all group"
+            >
+              <Info className="h-3.5 w-3.5 text-blue-400" />
+              <span className="font-mono text-[10px] font-bold text-zinc-400 uppercase tracking-[0.2em] group-hover:text-white">
+                DNS Verification Guide
+              </span>
+            </button>
+          </div>
         </div>
 
-        {/* Warning Banner - Only renders if not fully verified */}
-        {userProfile?.kyc_status !== "verified" && (
-          <Card
-            className={cn(
-              "border-amber-500/20 bg-amber-500/5",
-              userProfile?.kyc_status === "pending" &&
-                "border-blue-500/20 bg-blue-500/5",
-            )}
-          >
-            <CardContent className="py-4">
-              <div className="flex items-start gap-3">
-                {userProfile?.kyc_status === "pending" ? (
-                  <Clock className="h-5 w-5 text-blue-400 shrink-0 mt-0.5" />
-                ) : (
-                  <AlertCircle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
-                )}
-                <div className="flex-1">
-                  <p
-                    className={cn(
-                      "font-mono text-sm font-bold uppercase",
-                      userProfile?.kyc_status === "pending"
-                        ? "text-blue-400"
-                        : "text-amber-500",
-                    )}
-                  >
-                    {userProfile?.kyc_status === "pending"
-                      ? "Verification in Progress"
-                      : "Identity Verification Required"}
-                  </p>
-                  <p className="font-mono text-[11px] text-zinc-400 mt-1 max-w-2xl">
-                    {userProfile?.kyc_status === "pending"
-                      ? "Our administration team is currently reviewing your identity documents. This process usually takes 24-48 hours."
-                      : 'To become a "Verified Seller" and list domains in the Nexus Marketplace, you must complete your identity check.'}
-                    <br />
-                    Currently, your status is:{" "}
-                    <span
-                      className={cn(
-                        "font-bold uppercase",
-                        userProfile?.kyc_status === "pending"
-                          ? "text-blue-300"
-                          : "text-amber-300",
-                      )}
-                    >
-                      {userProfile?.kyc_status || "unverified"}
-                    </span>
-                    .
-                  </p>
-
-                  {/* Show "Become a Seller" button ONLY if unverified AND they have added at least one domain */}
-                  {userProfile?.kyc_status !== "pending" &&
-                    domains.length > 0 && (
-                      <Button
-                        onClick={() => setIsKycModalOpen(true)}
-                        variant="outline"
-                        size="sm"
-                        className="mt-4 border-amber-500/30 text-amber-500 hover:bg-amber-500/10 hover:text-amber-400 font-mono text-[10px]"
-                      >
-                        Become a Seller{" "}
-                        <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
-                      </Button>
-                    )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {userProfile?.kyc_status === "rejected" && (
+          <div className="p-4 rounded-xl border border-red-500/20 bg-red-500/5 flex items-start gap-4 animate-in slide-in-from-top-2">
+            <AlertCircle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <h4 className="font-mono text-sm font-bold text-red-400 uppercase tracking-tight">Verification Rejected</h4>
+              <p className="font-mono text-xs text-red-300/70 leading-relaxed">
+                {userProfile.kyc_rejection_reason || "Your verification request was declined. Please review your documents and try again."}
+              </p>
+            </div>
+          </div>
         )}
 
-        {/* Add Asset Card */}
+        {userProfile?.kyc_status === "pending" && (
+          <div className="p-4 rounded-xl border border-blue-500/20 bg-blue-500/5 flex items-start gap-4 animate-in slide-in-from-top-2">
+            <Clock className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <h4 className="font-mono text-sm font-bold text-blue-400 uppercase tracking-tight">Identity Audit in Progress</h4>
+              <p className="font-mono text-xs text-blue-300/70 leading-relaxed">
+                Your verification documents are currently being processed by the NEXUS security team. This usually takes 24-48 hours.
+              </p>
+            </div>
+          </div>
+        )}
         <Card>
           <CardContent className="py-5">
             <form
@@ -344,8 +365,19 @@ export default function PortfolioPage() {
                 disabled={isSubmitting || !newDomain || !boughtPrice}
                 className="font-mono text-xs px-6 w-full md:w-auto"
               >
-                {isSubmitting ? "Adding..." : "Add to Portfolio"}
-                <Plus className="ml-2 h-4 w-4" />
+                {isSubmitting ? (
+                  "Adding..."
+                ) : userProfile?.kyc_status === "verified" ? (
+                  <>
+                    Add to Portfolio
+                    <Plus className="ml-2 h-4 w-4" />
+                  </>
+                ) : (
+                  <>
+                    Verify to List
+                    <ShieldCheck className="ml-2 h-4 w-4 text-amber-400" />
+                  </>
+                )}
               </Button>
             </form>
           </CardContent>
@@ -438,15 +470,28 @@ export default function PortfolioPage() {
 
                       {d.verification_status !== "verified" && (
                         <div className="p-3 bg-zinc-950 border border-zinc-800 rounded-lg flex items-center gap-4">
-                          <div>
+                          <div className="flex-1">
                             <p className="font-mono text-[9px] text-zinc-600 uppercase">
                               Verification Token
                             </p>
-                            <code className="font-mono text-[11px] text-blue-400">
-                              nexus-site-verification={d.verification_token}
-                            </code>
+                            <div className="flex items-center gap-2">
+                              <code className="font-mono text-[11px] text-blue-400">
+                                nexus-site-verification={d.verification_token}
+                              </code>
+                              <button
+                                onClick={() => copyToClipboard(`nexus-site-verification=${d.verification_token}`)}
+                                className="p-1 rounded hover:bg-zinc-800 text-zinc-500 hover:text-blue-400 transition-all"
+                                title="Copy Token"
+                              >
+                                {copiedToken === `nexus-site-verification=${d.verification_token}` ? (
+                                  <Check className="h-3 w-3 text-emerald-500" />
+                                ) : (
+                                  <Copy className="h-3 w-3" />
+                                )}
+                              </button>
+                            </div>
                           </div>
-                          <div className="flex gap-2">
+                          <div className="flex items-center">
                             <Button
                               variant="secondary"
                               size="sm"
@@ -540,31 +585,64 @@ export default function PortfolioPage() {
                   </div>
 
                   <Card className="border-zinc-800 bg-zinc-900/50 backdrop-blur-sm">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-white">
-                        {step === 1 && (
-                          <UserIcon className="h-4 w-4 text-purple-400" />
-                        )}
-                        {step === 2 && (
-                          <Home className="h-4 w-4 text-blue-400" />
-                        )}
-                        {step === 3 && (
-                          <ShieldCheck className="h-4 w-4 text-green-400" />
-                        )}
-                        {step === 1 && "Personal Identity"}
-                        {step === 2 && "Parental & Address Details"}
-                        {step === 3 && "Document Upload"}
-                      </CardTitle>
-                      <CardDescription className="text-zinc-500">
-                        {step === 1 &&
-                          "Please enter your full legal name exactly as it appears on your ID."}
-                        {step === 2 &&
-                          "This information is used for secondary cross-verification."}
-                        {step === 3 &&
-                          "Upload clear images of both sides of your government certificate."}
-                      </CardDescription>
+                    <CardHeader className="border-b border-zinc-800/50 bg-zinc-900/20">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="h-8 w-8 rounded-lg bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
+                            <ShieldCheck className="h-4 w-4 text-purple-400" />
+                          </div>
+                          <div>
+                            <CardTitle className="font-mono text-sm font-bold text-white uppercase tracking-tight">
+                              {step === 0 ? "Verified Nexus Seller" : "Identity Verification"}
+                            </CardTitle>
+                            {step > 0 && (
+                              <p className="text-[9px] font-mono text-zinc-600 uppercase tracking-widest mt-0.5">
+                                Step {step} of 3 • Secure Nexus Portal
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <button
+                          onClick={resetModal}
+                          className="p-1 rounded-md text-zinc-600 hover:bg-zinc-800 hover:text-zinc-400 transition-all"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
                     </CardHeader>
-                    <CardContent className="space-y-6">
+                    <CardContent className="pt-6 space-y-6">
+                      {step === 0 && (
+                        <div className="space-y-6">
+                          <div className="p-4 rounded-xl border border-amber-500/20 bg-amber-500/5">
+                            <p className="font-mono text-xs text-amber-200/80 leading-relaxed">
+                              Your current status is <span className="font-bold uppercase text-amber-400">{userProfile?.kyc_status || "unverified"}</span>. 
+                              To unlock the full potential of the NEXUS Marketplace, you must become a Verified Seller.
+                            </p>
+                          </div>
+
+                          <div className="space-y-4">
+                            <h4 className="font-mono text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em]">Benefits of Verification</h4>
+                            <div className="grid gap-3">
+                              {[
+                                { title: "Nexus Marketplace Access", desc: "List your domains for sale to thousands of global buyers." },
+                                { title: "Verified Trust Badge", desc: "Gain institutional trust with a purple verification seal." },
+                                { title: "Instant Liquidity", desc: "Accept direct offers and negotiate in our secure exchange." },
+                                { title: "Priority Support", desc: "Direct access to our asset management and escrow team." }
+                              ].map((benefit, i) => (
+                                <div key={i} className="flex gap-3">
+                                  <div className="h-5 w-5 shrink-0 rounded bg-blue-500/10 flex items-center justify-center border border-blue-500/20 mt-0.5">
+                                    <CheckCircle2 className="h-3 w-3 text-blue-400" />
+                                  </div>
+                                  <div>
+                                    <p className="font-mono text-[11px] font-bold text-white">{benefit.title}</p>
+                                    <p className="font-mono text-[10px] text-zinc-500">{benefit.desc}</p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
                       {step === 1 && (
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-in fade-in duration-300">
                           <div className="space-y-2">
@@ -745,7 +823,7 @@ export default function PortfolioPage() {
                       <div className="flex items-center justify-between pt-4 border-t border-zinc-800/50">
                         <Button
                           variant="ghost"
-                          disabled={step === 1 || isSubmittingKyc}
+                          disabled={(step === 0 || step === 1) || isSubmittingKyc}
                           onClick={() => setStep(step - 1)}
                           className="text-zinc-500 hover:text-white"
                         >
@@ -755,9 +833,9 @@ export default function PortfolioPage() {
                         {step < 3 ? (
                           <Button
                             onClick={() => setStep(step + 1)}
-                            className="bg-purple-600 hover:bg-purple-700 text-white px-8"
+                            className="bg-purple-600 hover:bg-purple-700 text-white px-8 font-mono text-[10px] uppercase tracking-widest"
                           >
-                            Next <ArrowRight className="h-3.5 w-3.5 ml-2" />
+                            {step === 0 ? "Start Verification" : "Next"} <ArrowRight className="h-3.5 w-3.5 ml-2" />
                           </Button>
                         ) : (
                           <Button
@@ -797,19 +875,69 @@ export default function PortfolioPage() {
           </div>
         </div>
       )}
-      {/* Action Modal (Delete / Verify Success) */}
+      {/* Action Modal (Delete / Verify Success / DNS Guide) */}
       {actionModal.isOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="w-full max-w-md bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden p-6 text-center">
-            {actionModal.type === "delete" ? (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-zinc-950 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            {actionModal.type === "dns_guide" ? (
               <>
-                <div className="h-16 w-16 bg-red-500/10 border border-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="p-4 border-b border-zinc-800/50 bg-zinc-900/30 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="h-6 w-6 rounded bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                      <Globe className="h-3.5 w-3.5 text-blue-400" />
+                    </div>
+                    <h3 className="font-mono text-xs font-bold text-white uppercase tracking-wider">
+                      DNS Verification Guide
+                    </h3>
+                  </div>
+                  <button
+                    onClick={() => setActionModal({ ...actionModal, isOpen: false })}
+                    className="p-1 rounded-md text-zinc-500 hover:text-white transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="p-6 space-y-4">
+                  <div className="space-y-4">
+                    {[
+                      { step: "01", text: "Login to your domain registrar (GoDaddy, Namecheap, etc.)" },
+                      { step: "02", text: "Navigate to the DNS Management or Advanced DNS settings" },
+                      { step: "03", text: "Click 'Add New Record' and select type TXT" },
+                      { step: "04", text: "Set 'Host' or 'Name' field to @ (or leave blank)" },
+                      { step: "05", text: "Copy the verification token from the portfolio list" },
+                      { step: "06", text: "Paste the token into the 'Value' field and save changes" },
+                      { step: "07", text: "Wait 2-5 minutes and click 'Verify DNS' in NEXUS" }
+                    ].map((s) => (
+                      <div key={s.step} className="flex gap-4">
+                        <span className="font-mono text-[10px] font-bold text-blue-500/50 shrink-0 mt-0.5">
+                          {s.step}
+                        </span>
+                        <p className="font-mono text-[11px] text-zinc-400 leading-relaxed">
+                          {s.text}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="pt-4 border-t border-zinc-800/50">
+                    <Button
+                      onClick={() => setActionModal({ ...actionModal, isOpen: false })}
+                      className="w-full bg-zinc-900 hover:bg-zinc-800 text-white font-mono text-[10px] uppercase h-9"
+                    >
+                      Understood, Proceed
+                    </Button>
+                  </div>
+                </div>
+              </>
+            ) : actionModal.type === "delete" ? (
+              <div className="p-8 text-center">
+                <div className="h-16 w-16 bg-red-500/10 border border-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Trash2 className="h-8 w-8 text-red-500" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">
+                <h3 className="text-xl font-bold text-white mb-2 uppercase tracking-tight font-mono">
                   Remove Domain?
                 </h3>
-                <p className="text-zinc-400 text-sm font-mono mb-6">
+                <p className="text-zinc-400 text-xs font-mono mb-8 uppercase tracking-wider leading-relaxed">
                   {actionModal.domain?.verification_status === "verified" ? (
                     <span className="text-amber-500 font-bold">
                       Warning: This is a verified asset. Removing it will delete
@@ -822,7 +950,7 @@ export default function PortfolioPage() {
                 <div className="flex gap-3">
                   <Button
                     variant="outline"
-                    className="flex-1 border-zinc-800 text-zinc-400 hover:text-white"
+                    className="flex-1 border-zinc-800 text-zinc-400 hover:text-white font-mono text-[10px] uppercase tracking-widest h-10"
                     onClick={() =>
                       setActionModal({ ...actionModal, isOpen: false })
                     }
@@ -830,35 +958,35 @@ export default function PortfolioPage() {
                     No, Keep it
                   </Button>
                   <Button
-                    className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-mono text-[10px] uppercase tracking-widest h-10"
                     onClick={confirmDelete}
                   >
                     Yes, Remove
                   </Button>
                 </div>
-              </>
+              </div>
             ) : (
-              <>
-                <div className="h-16 w-16 bg-green-500/10 border border-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="p-8 text-center">
+                <div className="h-16 w-16 bg-green-500/10 border border-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
                   <CheckCircle2 className="h-8 w-8 text-green-500" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">
+                <h3 className="text-xl font-bold text-white mb-2 uppercase tracking-tight font-mono">
                   Asset Verified
                 </h3>
-                <p className="text-zinc-400 text-sm font-mono mb-6">
+                <p className="text-zinc-400 text-xs font-mono mb-8 uppercase tracking-wider leading-relaxed">
                   Success! <span className="text-white">{actionModal.domain?.domain}</span> has
                   been cryptographically verified. It is now visible to the
                   NEXUS institutional engine.
                 </p>
                 <Button
-                  className="w-full bg-zinc-800 text-white hover:bg-zinc-700"
+                  className="w-full bg-zinc-800 text-white hover:bg-zinc-700 font-mono text-[10px] uppercase tracking-widest h-10"
                   onClick={() =>
                     setActionModal({ ...actionModal, isOpen: false })
                   }
                 >
                   Continue to Dashboard
                 </Button>
-              </>
+              </div>
             )}
           </div>
         </div>

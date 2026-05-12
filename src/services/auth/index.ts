@@ -57,6 +57,24 @@ export async function login(
   return apiClient.post('/api/auth/login', { email, password });
 }
 
+export async function sendOTP(email: string): Promise<{ success: boolean; message: string }> {
+  try {
+    const response: any = await apiClient.post('/api/auth/send_otp', { email });
+    return { success: true, message: response.message || "OTP sent" };
+  } catch (error: any) {
+    return { success: false, message: error.response?.data?.message || "Failed to send OTP" };
+  }
+}
+
+export async function verifyOTP(email: string, otp: string): Promise<{ success: boolean; message: string }> {
+  try {
+    const response: any = await apiClient.post('/api/auth/verify_otp', { email, otp });
+    return { success: true, message: response.message || "Email verified" };
+  } catch (error: any) {
+    return { success: false, message: error.response?.data?.message || "Invalid or expired OTP" };
+  }
+}
+
 /**
  * Retrieves the current user from the server session.
  * Credentials handled automatically via cookies.

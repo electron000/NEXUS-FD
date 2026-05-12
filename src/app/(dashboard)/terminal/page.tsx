@@ -321,7 +321,7 @@ function ResultsPanel({
               </Tooltip>
             </CardTitle>
           </CardHeader>
-          <CardContent className="py-10 text-center">
+          <CardContent className="py-10 text-center relative overflow-hidden">
             <p className="font-mono text-[10px] text-zinc-500 uppercase tracking-widest mb-2">
               ML Investment Tier
             </p>
@@ -352,7 +352,7 @@ function ResultsPanel({
               </Tooltip>
             </CardTitle>
           </CardHeader>
-          <CardContent className="py-10 text-center">
+          <CardContent className="py-10 text-center relative overflow-hidden">
             <p className="font-mono text-[10px] text-zinc-500 uppercase tracking-widest mb-2">
               ML Price Estimate
             </p>

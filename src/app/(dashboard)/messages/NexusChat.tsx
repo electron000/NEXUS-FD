@@ -63,9 +63,19 @@ export function NexusChat({ inquiry, onBack }: NexusChatProps) {
     };
     initializeChat();
 
-    socket.emit("join_inquiry", inquiry.id);
+    const joinRoom = () => {
+      console.log("Joining inquiry room:", inquiry.id);
+      socket.emit("join_inquiry", inquiry.id);
+    };
+
+    if (socket.connected) {
+      joinRoom();
+    }
+
+    socket.on("connect", joinRoom);
 
     const handleNewMessage = (msg: Message) => {
+      console.log("New message received via socket:", msg);
       setMessages((prev) => {
         const messageMap = new Map(prev.map((m) => [String(m.id), m]));
         messageMap.set(String(msg.id), msg);
@@ -75,9 +85,20 @@ export function NexusChat({ inquiry, onBack }: NexusChatProps) {
 
     socket.on("new_message", handleNewMessage);
     return () => {
+      socket.off("connect", joinRoom);
       socket.off("new_message", handleNewMessage);
     };
   }, [inquiry.id, fetchMessages, socket]);
+
+  // WhatsApp-style Auto-scroll: Scroll to bottom when messages change or component loads
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, [messages, isLoading]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
