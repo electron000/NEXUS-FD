@@ -378,7 +378,7 @@ function ResultsPanel({
           </div>
           <ScoreGauge
             value={data.score.model}
-            label="Model Score"
+            label="Nexus Score"
             color="#3b82f6"
           />
           <p className="mt-4 font-mono text-[10px] text-zinc-600 uppercase">
@@ -406,259 +406,284 @@ function ResultsPanel({
   );
 
   // 3. EXCHANGE VIEW
-  const renderExchange = () => (
-    <div className="space-y-5">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {/* Card 1: Ownership Snapshot */}
-        <Card className="flex flex-col">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-zinc-300">
-              <User className="h-4 w-4 text-purple-400" />
-              Ownership Snapshot
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1 space-y-4">
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="font-mono text-[11px] text-zinc-600 uppercase">Owner</span>
-                <span className="font-mono text-sm text-white font-medium truncate ml-4">
-                  {data.ownership?.ownerName || data.ownership?.organization || "Redacted"}
-                </span>
-              </div>
-              {data.ownership?.organization && data.ownership?.ownerName && (
-                <div className="flex justify-between items-center">
-                  <span className="font-mono text-[11px] text-zinc-600 uppercase">Organization</span>
-                  <span className="font-mono text-sm text-white truncate ml-4">{data.ownership.organization}</span>
-                </div>
-              )}
-              {data.ownership?.ownerEmail && (
-                <div className="flex justify-between items-center">
-                  <span className="font-mono text-[11px] text-zinc-600 uppercase">Owner Email</span>
-                  <a href={`mailto:${data.ownership.ownerEmail}`} className="font-mono text-sm text-blue-400 hover:text-blue-300 transition-colors truncate ml-4">
-                    {data.ownership.ownerEmail}
-                  </a>
-                </div>
-              )}
-              <div className="flex justify-between items-center">
-                <span className="font-mono text-[11px] text-zinc-600 uppercase">Location</span>
-                <span className="font-mono text-sm text-white">{data.ownership?.country || data.ownership?.organization || "Unknown"}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="font-mono text-[11px] text-zinc-600 uppercase">Last Sync</span>
-                <span className="font-mono text-sm text-zinc-500">
-                  {data.ownership?.lastUpdated ? new Date(data.ownership.lastUpdated).toLocaleDateString() : "N/A"}
-                </span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+  const renderExchange = () => {
+    const isVerifiedSeller = isNexusOwned && data.ownership?.isVerified;
 
-        {/* Card 2: Registry Intelligence */}
-        <Card className="flex flex-col">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-zinc-300">
-              <Activity className="h-4 w-4 text-blue-400" />
-              Registry Intelligence
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1 space-y-4">
-            <div className="space-y-3">
-              <div className="flex justify-between items-start">
-                <span className="font-mono text-[11px] text-zinc-600 uppercase mt-0.5">Status</span>
-                <div className="flex flex-col items-end gap-1">
-                  {data.ownership?.status && data.ownership.status.length > 0 ? (
-                    data.ownership.status.map((s, idx) => (
-                      <span key={idx} className="font-mono text-[10px] text-amber-400 uppercase text-right leading-tight">{s}</span>
-                    ))
-                  ) : (
-                    <span className="font-mono text-sm text-white">Active</span>
-                  )}
-                </div>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="font-mono text-[11px] text-zinc-600 uppercase">Created</span>
-                <span className="font-mono text-sm text-white">
-                  {data.ownership?.creationDate ? new Date(data.ownership.creationDate).toLocaleDateString() : "Unknown"}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="font-mono text-[11px] text-zinc-600 uppercase">Expires</span>
-                <span className="font-mono text-sm text-white">
-                  {data.ownership?.expiryDate ? new Date(data.ownership.expiryDate).toLocaleDateString() : "Unknown"}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="font-mono text-[11px] text-zinc-600 uppercase">DNSSEC</span>
-                <span className="font-mono text-sm text-white uppercase">{data.ownership?.dnssec || "Unsigned"}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Card 3: Registrar Infrastructure */}
-        <Card className="flex flex-col">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-zinc-300">
-              <Globe className="h-4 w-4 text-emerald-400" />
-              Registrar Infrastructure
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1 space-y-4">
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="font-mono text-[11px] text-zinc-600 uppercase">Provider</span>
-                <span className="font-mono text-sm text-white">{data.ownership?.registrarName || "Internal Nexus"}</span>
-              </div>
-              {data.ownership?.registrarEmail && (
-                <div className="flex justify-between items-center">
-                  <span className="font-mono text-[11px] text-zinc-600 uppercase">Registrar Email</span>
-                  <a href={`mailto:${data.ownership.registrarEmail}`} className="font-mono text-sm text-blue-400/80 hover:text-blue-300 transition-colors truncate ml-4">
-                    {data.ownership.registrarEmail}
-                  </a>
-                </div>
-              )}
-              {data.ownership?.registrarUrl && (
-                <div className="flex justify-between items-center pt-2">
-                  <span className="font-mono text-[11px] text-zinc-600 uppercase">RDDS Service</span>
-                  <a 
-                    href={data.ownership.registrarUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="font-mono text-[10px] text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1 border border-blue-500/20 px-2 py-1 rounded bg-blue-500/5"
-                  >
-                    Visit Provider <ChevronRight className="h-3 w-3" />
-                  </a>
-                </div>
-              )}
-              <div className="flex justify-between items-start pt-2 border-t border-zinc-800/50">
-                <span className="font-mono text-[11px] text-zinc-600 uppercase mt-0.5">Nameservers</span>
-                <div className="flex flex-col items-end gap-1">
-                  {data.ownership?.nameservers && data.ownership.nameservers.length > 0 ? (
-                    data.ownership.nameservers.map((ns, idx) => (
-                      <span key={idx} className="font-mono text-[9px] text-zinc-500 lowercase">{ns}</span>
-                    ))
-                  ) : (
-                    <span className="font-mono text-sm text-zinc-600">None detected</span>
-                  )}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Card 4: Communications & Reach */}
-        <Card className="flex flex-col">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-zinc-300">
-              <Zap className="h-4 w-4 text-amber-400" />
-              Communications & Reach
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1 space-y-4">
-            <div className="flex items-center justify-between">
-              <p className="font-mono text-[11px] text-zinc-600 uppercase">Mail Infrastructure</p>
-              <div className="flex items-center gap-2">
-                <div className={cn("h-2 w-2 rounded-full", data.ownership?.dnsIntelligence?.hasMail ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-zinc-800")} />
-                <span className="font-mono text-[10px] text-white">
-                  {data.ownership?.dnsIntelligence?.hasMail 
-                    ? data.ownership.dnsIntelligence.mailProvider 
-                    : "None"}
-                </span>
-              </div>
-            </div>
-
-            {data.ownership?.dnsIntelligence?.hasMail && (
-              <div className="space-y-2 pt-2 border-t border-zinc-800/50">
-                <p className="font-mono text-[10px] text-zinc-600 uppercase">Probable Routes</p>
-                <div className="flex flex-wrap gap-2">
-                  {['admin', 'info'].map(alias => (
-                    <Badge key={alias} variant="outline" className="font-mono text-[9px] border-zinc-800 bg-zinc-900/50 text-zinc-500">
-                      {alias}@{data.domain}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <Button 
-              variant="outline" 
-              className="w-full h-9 font-mono text-[10px] uppercase border-zinc-800 bg-zinc-950 hover:bg-zinc-800 text-zinc-500 mt-2"
-              onClick={() => {
-                const registrar = data.ownership?.registrarName?.toLowerCase() || '';
-                let url = `https://www.google.com/search?q=${encodeURIComponent(registrar + ' whois lookup')}`;
-                if (registrar.includes('hostinger')) url = 'https://www.hostinger.com/whois';
-                if (registrar.includes('godaddy')) url = 'https://whois.godaddy.com/';
-                if (registrar.includes('name.com')) url = 'https://www.name.com/whois';
-                if (registrar.includes('porkbun')) url = 'https://porkbun.com/whois';
-                window.open(url, '_blank');
-              }}
-            >
-              Manual RDDS Lookup
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Transaction / Buyout Card (Spans full width if needed or takes a slot) */}
-        <Card glow={isNexusOwned ? "blue" : undefined} className="md:col-span-2">
-          <CardContent className="py-8">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-              <div className="flex items-center gap-6">
-                <div className={cn("h-16 w-16 rounded-full flex items-center justify-center border", isNexusOwned ? "bg-blue-500/10 border-blue-500/20" : "bg-zinc-800 border-zinc-700")}>
-                  {isNexusOwned ? (
-                    <Handshake className="h-8 w-8 text-blue-400" />
-                  ) : (
-                    <Lock className="h-8 w-8 text-zinc-600" />
-                  )}
-                </div>
-                <div>
-                  <h4 className="font-mono text-sm font-bold text-white uppercase tracking-tight">
-                    {isNexusOwned ? "Secure Peer-to-Peer Transaction" : "External Asset Acquisition"}
-                  </h4>
-                  <p className="font-mono text-[11px] text-zinc-500 max-w-md mt-1">
-                    {isNexusOwned 
-                      ? "This domain is owned by a verified Nexus member. You can initiate a secure negotiation through our internal escrow system."
-                      : "This owner is not a Nexus member. Direct negotiation is restricted. You can watch this asset for future listings or drops."}
-                  </p>
-                </div>
-              </div>
-
-              <div className="shrink-0 w-full md:w-auto">
+    const TransactionCard = () => (
+      <Card glow={isNexusOwned ? "blue" : undefined} className="md:col-span-2">
+        <CardContent className="py-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="flex items-center gap-6">
+              <div className={cn("h-16 w-16 rounded-full flex items-center justify-center border", isNexusOwned ? "bg-blue-500/10 border-blue-500/20" : "bg-zinc-800 border-zinc-700")}>
                 {isNexusOwned ? (
-                  <div className="flex flex-col items-center gap-3">
-                    {data.ownership?.isForSale && (
-                      <div className="text-center mb-1">
-                        <p className="font-mono text-[9px] text-zinc-600 uppercase">Asking Price</p>
-                        <p className="font-mono text-2xl font-bold text-white">₹{data.ownership.askingPrice?.toLocaleString("en-IN")}</p>
-                      </div>
-                    )}
-                    <Button
-                      onClick={() => onContact(data.domain)}
-                      className="w-full md:w-64 bg-blue-600 hover:bg-blue-500 text-white font-mono text-xs h-12 shadow-lg shadow-blue-900/20"
-                    >
-                      <MessageSquare className="h-4 w-4 mr-2" />
-                      Initiate Negotiation
-                    </Button>
-                  </div>
+                  isVerifiedSeller ? <ShieldCheck className="h-8 w-8 text-blue-400" /> : <Handshake className="h-8 w-8 text-blue-400" />
                 ) : (
-                  <Button
-                    variant="outline"
-                    onClick={() =>
-                      inWatchlist
-                        ? removeFromWatchlist(data.domain)
-                        : addToWatchlist(data.domain)
-                    }
-                    className="w-full md:w-64 font-mono text-xs border-zinc-800 text-zinc-500 hover:text-white hover:bg-zinc-800 h-12"
-                  >
-                    {inWatchlist ? "Monitoring Asset" : "Watch for Listing"}
-                  </Button>
+                  <Lock className="h-8 w-8 text-zinc-600" />
                 )}
               </div>
+              <div>
+                <h4 className="font-mono text-sm font-bold text-white uppercase tracking-tight">
+                  {isVerifiedSeller ? (
+                    <span className="flex items-center gap-2">
+                      <ShieldCheck className="h-4 w-4 text-blue-400" />
+                      Verified Nexus Seller: {data.ownership?.ownerName}
+                    </span>
+                  ) : isNexusOwned ? (
+                    <div className="flex flex-col">
+                      <span>Secure Peer-to-Peer Transaction</span>
+                      {data.ownership?.ownerName && (
+                        <span className="text-[10px] text-zinc-500 font-normal mt-0.5 normal-case tracking-normal">
+                          Seller: {data.ownership.ownerName}
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    "External Asset Acquisition"
+                  )}
+                </h4>
+                <p className="font-mono text-[11px] text-zinc-500 max-w-md mt-1">
+                  {isNexusOwned 
+                    ? "This domain is owned by a verified Nexus member. You can initiate a secure negotiation through our internal escrow system."
+                    : "This owner is not a Nexus member. Direct negotiation is restricted. You can watch this asset for future listings or drops."}
+                </p>
+              </div>
             </div>
-          </CardContent>
-        </Card>
+
+            <div className="shrink-0 w-full md:w-auto">
+              {isNexusOwned ? (
+                <div className="flex flex-col items-center gap-3">
+                  {data.ownership?.isForSale && (
+                    <div className="text-center mb-1">
+                      <p className="font-mono text-[9px] text-zinc-600 uppercase">Asking Price</p>
+                      <p className="font-mono text-2xl font-bold text-white">₹{data.ownership.askingPrice?.toLocaleString("en-IN")}</p>
+                    </div>
+                  )}
+                  <Button
+                    onClick={() => onContact(data.domain)}
+                    className="w-full md:w-64 bg-blue-600 hover:bg-blue-500 text-white font-mono text-xs h-12 shadow-lg shadow-blue-900/20"
+                  >
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Initiate Negotiation
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    inWatchlist
+                      ? removeFromWatchlist(data.domain)
+                      : addToWatchlist(data.domain)
+                    }
+                  className="w-full md:w-64 font-mono text-xs border-zinc-800 text-zinc-500 hover:text-white hover:bg-zinc-800 h-12"
+                >
+                  {inWatchlist ? "Monitoring Asset" : "Watch for Listing"}
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+
+    return (
+      <div className="space-y-5">
+        {isVerifiedSeller && <TransactionCard />}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {/* Card 1: Ownership Snapshot */}
+          <Card className="flex flex-col">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-zinc-300">
+                <User className="h-4 w-4 text-purple-400" />
+                Ownership Snapshot
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex-1 space-y-4">
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="font-mono text-[11px] text-zinc-600 uppercase">Owner</span>
+                  <span className="font-mono text-sm text-white font-medium truncate ml-4">
+                    {data.ownership?.ownerName || data.ownership?.organization || "Redacted"}
+                  </span>
+                </div>
+                {data.ownership?.organization && data.ownership?.ownerName && (
+                  <div className="flex justify-between items-center">
+                    <span className="font-mono text-[11px] text-zinc-600 uppercase">Organization</span>
+                    <span className="font-mono text-sm text-white truncate ml-4">{data.ownership.organization}</span>
+                  </div>
+                )}
+                {data.ownership?.ownerEmail && (
+                  <div className="flex justify-between items-center">
+                    <span className="font-mono text-[11px] text-zinc-600 uppercase">Owner Email</span>
+                    <a href={`mailto:${data.ownership.ownerEmail}`} className="font-mono text-sm text-blue-400 hover:text-blue-300 transition-colors truncate ml-4">
+                      {data.ownership.ownerEmail}
+                    </a>
+                  </div>
+                )}
+                <div className="flex justify-between items-center">
+                  <span className="font-mono text-[11px] text-zinc-600 uppercase">Location</span>
+                  <span className="font-mono text-sm text-white">{data.ownership?.country || data.ownership?.organization || "Unknown"}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="font-mono text-[11px] text-zinc-600 uppercase">Last Sync</span>
+                  <span className="font-mono text-sm text-zinc-500">
+                    {data.ownership?.lastUpdated ? new Date(data.ownership.lastUpdated).toLocaleDateString() : "N/A"}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Card 2: Registry Intelligence */}
+          <Card className="flex flex-col">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-zinc-300">
+                <Activity className="h-4 w-4 text-blue-400" />
+                Registry Intelligence
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex-1 space-y-4">
+              <div className="space-y-3">
+                <div className="flex justify-between items-start">
+                  <span className="font-mono text-[11px] text-zinc-600 uppercase mt-0.5">Status</span>
+                  <div className="flex flex-col items-end gap-1">
+                    {data.ownership?.status && data.ownership.status.length > 0 ? (
+                      data.ownership.status.map((s, idx) => (
+                        <span key={idx} className="font-mono text-[10px] text-amber-400 uppercase text-right leading-tight">{s}</span>
+                      ))
+                    ) : (
+                      <span className="font-mono text-sm text-white">Active</span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="font-mono text-[11px] text-zinc-600 uppercase">Created</span>
+                  <span className="font-mono text-sm text-white">
+                    {data.ownership?.creationDate ? new Date(data.ownership.creationDate).toLocaleDateString() : "Unknown"}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="font-mono text-[11px] text-zinc-600 uppercase">Expires</span>
+                  <span className="font-mono text-sm text-white">
+                    {data.ownership?.expiryDate ? new Date(data.ownership.expiryDate).toLocaleDateString() : "Unknown"}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="font-mono text-[11px] text-zinc-600 uppercase">DNSSEC</span>
+                  <span className="font-mono text-sm text-white uppercase">{data.ownership?.dnssec || "Unsigned"}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Card 3: Registrar Infrastructure */}
+          <Card className="flex flex-col">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-zinc-300">
+                <Globe className="h-4 w-4 text-emerald-400" />
+                Registrar Infrastructure
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex-1 space-y-4">
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="font-mono text-[11px] text-zinc-600 uppercase">Provider</span>
+                  <span className="font-mono text-sm text-white">{data.ownership?.registrarName || "Internal Nexus"}</span>
+                </div>
+                {data.ownership?.registrarEmail && (
+                  <div className="flex justify-between items-center">
+                    <span className="font-mono text-[11px] text-zinc-600 uppercase">Registrar Email</span>
+                    <a href={`mailto:${data.ownership.registrarEmail}`} className="font-mono text-sm text-blue-400/80 hover:text-blue-300 transition-colors truncate ml-4">
+                      {data.ownership.registrarEmail}
+                    </a>
+                  </div>
+                )}
+                {data.ownership?.registrarUrl && (
+                  <div className="flex justify-between items-center pt-2">
+                    <span className="font-mono text-[11px] text-zinc-600 uppercase">RDDS Service</span>
+                    <a 
+                      href={data.ownership.registrarUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="font-mono text-[10px] text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1 border border-blue-500/20 px-2 py-1 rounded bg-blue-500/5"
+                    >
+                      Visit Provider <ChevronRight className="h-3 w-3" />
+                    </a>
+                  </div>
+                )}
+                <div className="flex justify-between items-start pt-2 border-t border-zinc-800/50">
+                  <span className="font-mono text-[11px] text-zinc-600 uppercase mt-0.5">Nameservers</span>
+                  <div className="flex flex-col items-end gap-1">
+                    {data.ownership?.nameservers && data.ownership.nameservers.length > 0 ? (
+                      data.ownership.nameservers.map((ns, idx) => (
+                        <span key={idx} className="font-mono text-[9px] text-zinc-500 lowercase">{ns}</span>
+                      ))
+                    ) : (
+                      <span className="font-mono text-sm text-zinc-600">None detected</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Card 4: Communications & Reach */}
+          <Card className="flex flex-col">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-zinc-300">
+                <Zap className="h-4 w-4 text-amber-400" />
+                Communications & Reach
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex-1 space-y-4">
+              <div className="flex items-center justify-between">
+                <p className="font-mono text-[11px] text-zinc-600 uppercase">Mail Infrastructure</p>
+                <div className="flex items-center gap-2">
+                  <div className={cn("h-2 w-2 rounded-full", data.ownership?.dnsIntelligence?.hasMail ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-zinc-800")} />
+                  <span className="font-mono text-[10px] text-white">
+                    {data.ownership?.dnsIntelligence?.hasMail 
+                      ? data.ownership.dnsIntelligence.mailProvider 
+                      : "None"}
+                  </span>
+                </div>
+              </div>
+
+              {data.ownership?.dnsIntelligence?.hasMail && (
+                <div className="space-y-2 pt-2 border-t border-zinc-800/50">
+                  <p className="font-mono text-[10px] text-zinc-600 uppercase">Probable Routes</p>
+                  <div className="flex flex-wrap gap-2">
+                    {['admin', 'info'].map(alias => (
+                      <Badge key={alias} variant="outline" className="font-mono text-[9px] border-zinc-800 bg-zinc-900/50 text-zinc-500">
+                        {alias}@{data.domain}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <Button 
+                variant="outline" 
+                className="w-full h-9 font-mono text-[10px] uppercase border-zinc-800 bg-zinc-950 hover:bg-zinc-800 text-zinc-500 mt-2"
+                onClick={() => {
+                  const registrar = data.ownership?.registrarName?.toLowerCase() || '';
+                  let url = `https://www.google.com/search?q=${encodeURIComponent(registrar + ' whois lookup')}`;
+                  if (registrar.includes('hostinger')) url = 'https://www.hostinger.com/whois';
+                  if (registrar.includes('godaddy')) url = 'https://whois.godaddy.com/';
+                  if (registrar.includes('name.com')) url = 'https://www.name.com/whois';
+                  if (registrar.includes('porkbun')) url = 'https://porkbun.com/whois';
+                  window.open(url, '_blank');
+                }}
+              >
+                Manual RDDS Lookup
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Transaction / Buyout Card (Spans full width if needed or takes a slot) */}
+          {!isVerifiedSeller && <TransactionCard />}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <motion.div
