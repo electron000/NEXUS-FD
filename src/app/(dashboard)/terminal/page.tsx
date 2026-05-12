@@ -408,165 +408,238 @@ function ResultsPanel({
   // 3. EXCHANGE VIEW
   const renderExchange = () => (
     <div className="space-y-5">
-      <Card glow={isNexusOwned ? "blue" : undefined}>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-zinc-300">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        {/* Card 1: Ownership Snapshot */}
+        <Card className="flex flex-col">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-zinc-300">
               <User className="h-4 w-4 text-purple-400" />
-              Ownership & Registrar Intelligence
-            </div>
-            <div className="flex items-center gap-3">
-              {data.ownership?.registered !== undefined && (
-                <Badge 
-                  variant={data.ownership.registered ? "outline" : "positive"}
-                  className={cn("font-mono", data.ownership.registered ? "border-amber-500/50 text-amber-500" : "border-green-500/50 text-green-500")}
-                >
-                  {data.ownership.registered ? "Registered" : "Available"}
-                </Badge>
-              )}
-              {data.ownership?.isVerified && (
-                <Badge variant="positive" className="flex items-center gap-1">
-                  <ShieldCheck className="h-3 w-3" /> Verified Nexus Seller
-                </Badge>
-              )}
-              <Tooltip content="Domain intelligence retrieved via global WHOIS/RDAP protocols.">
-                <Info className="h-3.5 w-3.5 text-zinc-600 cursor-help" />
-              </Tooltip>
-            </div>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="space-y-4">
-              {/* Ownership Snapshot */}
-              <div className="p-5 rounded-xl border border-zinc-800 bg-zinc-900/50">
-                <h4 className="font-mono text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4">
-                  Ownership Snapshot
-                </h4>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="font-mono text-[11px] text-zinc-600 uppercase">Owner</span>
-                    <span className="font-mono text-sm text-white font-medium">{data.ownership?.ownerName || "Redacted"}</span>
-                  </div>
-                  {data.ownership?.ownerEmail && (
-                    <div className="flex justify-between items-center">
-                      <span className="font-mono text-[11px] text-zinc-600 uppercase">Owner Email</span>
-                      <a href={`mailto:${data.ownership.ownerEmail}`} className="font-mono text-sm text-blue-400 hover:text-blue-300 transition-colors truncate ml-4">
-                        {data.ownership.ownerEmail}
-                      </a>
-                    </div>
-                  )}
-                  {data.ownership?.ownerPhone && (
-                    <div className="flex justify-between items-center">
-                      <span className="font-mono text-[11px] text-zinc-600 uppercase">Owner Phone</span>
-                      <a href={`tel:${data.ownership.ownerPhone}`} className="font-mono text-sm text-zinc-400 hover:text-white transition-colors">
-                        {data.ownership.ownerPhone}
-                      </a>
-                    </div>
-                  )}
-                  <div className="flex justify-between items-center">
-                    <span className="font-mono text-[11px] text-zinc-600 uppercase">Location</span>
-                    <span className="font-mono text-sm text-white">{data.ownership?.country || data.ownership?.organization || "Unknown"}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="font-mono text-[11px] text-zinc-600 uppercase">Last Sync</span>
-                    <span className="font-mono text-sm text-zinc-500">
-                      {data.ownership?.lastUpdated ? new Date(data.ownership.lastUpdated).toLocaleDateString() : "N/A"}
-                    </span>
-                  </div>
-                </div>
+              Ownership Snapshot
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex-1 space-y-4">
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="font-mono text-[11px] text-zinc-600 uppercase">Owner</span>
+                <span className="font-mono text-sm text-white font-medium truncate ml-4">
+                  {data.ownership?.ownerName || data.ownership?.organization || "Redacted"}
+                </span>
               </div>
-
-              {/* Registrar Data */}
-              <div className="p-5 rounded-xl border border-zinc-800 bg-zinc-900/50">
-                <h4 className="font-mono text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4">
-                  Registrar Infrastructure
-                </h4>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="font-mono text-[11px] text-zinc-600 uppercase">Provider</span>
-                    <span className="font-mono text-sm text-white">{data.ownership?.registrarName || "Internal Nexus"}</span>
-                  </div>
-                  {data.ownership?.registrarEmail && (
-                    <div className="flex justify-between items-center">
-                      <span className="font-mono text-[11px] text-zinc-600 uppercase">Registrar Email</span>
-                      <a href={`mailto:${data.ownership.registrarEmail}`} className="font-mono text-sm text-blue-400/80 hover:text-blue-300 transition-colors truncate ml-4">
-                        {data.ownership.registrarEmail}
-                      </a>
-                    </div>
-                  )}
-                  {data.ownership?.registrarPhone && (
-                    <div className="flex justify-between items-center">
-                      <span className="font-mono text-[11px] text-zinc-600 uppercase">Registrar Phone</span>
-                      <a href={`tel:${data.ownership.registrarPhone}`} className="font-mono text-sm text-zinc-400 hover:text-white transition-colors">
-                        {data.ownership.registrarPhone}
-                      </a>
-                    </div>
-                  )}
+              {data.ownership?.organization && data.ownership?.ownerName && (
+                <div className="flex justify-between items-center">
+                  <span className="font-mono text-[11px] text-zinc-600 uppercase">Organization</span>
+                  <span className="font-mono text-sm text-white truncate ml-4">{data.ownership.organization}</span>
                 </div>
+              )}
+              {data.ownership?.ownerEmail && (
+                <div className="flex justify-between items-center">
+                  <span className="font-mono text-[11px] text-zinc-600 uppercase">Owner Email</span>
+                  <a href={`mailto:${data.ownership.ownerEmail}`} className="font-mono text-sm text-blue-400 hover:text-blue-300 transition-colors truncate ml-4">
+                    {data.ownership.ownerEmail}
+                  </a>
+                </div>
+              )}
+              <div className="flex justify-between items-center">
+                <span className="font-mono text-[11px] text-zinc-600 uppercase">Location</span>
+                <span className="font-mono text-sm text-white">{data.ownership?.country || data.ownership?.organization || "Unknown"}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="font-mono text-[11px] text-zinc-600 uppercase">Last Sync</span>
+                <span className="font-mono text-sm text-zinc-500">
+                  {data.ownership?.lastUpdated ? new Date(data.ownership.lastUpdated).toLocaleDateString() : "N/A"}
+                </span>
               </div>
             </div>
+          </CardContent>
+        </Card>
 
-            <div className="flex flex-col justify-center min-h-[200px]">
-              {isNexusOwned ? (
-                <div className="p-8 rounded-xl border border-purple-500/20 bg-purple-500/5 text-center relative overflow-hidden group">
-                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-purple-500 to-transparent opacity-50" />
-                  <div className="absolute top-3 right-3">
-                    <Tooltip content="Immutable Nexus Ledger for verified seller listings and bid history.">
-                      <Info className="h-3 w-3 text-purple-400/50" />
-                    </Tooltip>
-                  </div>
-                  {data.ownership?.isForSale ? (
-                    <>
-                      <p className="font-mono text-[10px] text-purple-400 uppercase tracking-widest mb-2">
-                        Nexus Listed Asking Price
-                      </p>
-                      <p className="font-mono text-4xl font-bold text-white tracking-tighter mb-8">
-                        ₹{data.ownership.askingPrice?.toLocaleString("en-IN")}
-                      </p>
-                      <Button
-                        onClick={() => onContact(data.domain)}
-                        className="w-full bg-purple-600 hover:bg-purple-500 text-white font-mono text-xs h-12 shadow-lg shadow-purple-900/20 group-hover:scale-[1.02] transition-transform"
-                      >
-                        <Handshake className="h-4 w-4 mr-2" />
-                        Initiate P2P Negotiation
-                      </Button>
-                    </>
+        {/* Card 2: Registry Intelligence */}
+        <Card className="flex flex-col">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-zinc-300">
+              <Activity className="h-4 w-4 text-blue-400" />
+              Registry Intelligence
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex-1 space-y-4">
+            <div className="space-y-3">
+              <div className="flex justify-between items-start">
+                <span className="font-mono text-[11px] text-zinc-600 uppercase mt-0.5">Status</span>
+                <div className="flex flex-col items-end gap-1">
+                  {data.ownership?.status && data.ownership.status.length > 0 ? (
+                    data.ownership.status.map((s, idx) => (
+                      <span key={idx} className="font-mono text-[10px] text-amber-400 uppercase text-right leading-tight">{s}</span>
+                    ))
                   ) : (
-                    <>
-                      <div className="h-14 w-14 rounded-full bg-purple-500/10 flex items-center justify-center mx-auto mb-4 border border-purple-500/20">
-                        <Handshake className="h-6 w-6 text-purple-400" />
-                      </div>
-                      <p className="font-mono text-sm font-bold text-white mb-2 uppercase">
-                        Verified Member Asset
-                      </p>
-                      <p className="font-mono text-[11px] text-zinc-500 mb-8 leading-relaxed max-w-[240px] mx-auto">
-                        This asset is not actively listed, but the owner is a
-                        Nexus member. Secure negotiation is possible.
-                      </p>
-                      <Button
-                        onClick={() => onContact(data.domain)}
-                        className="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-mono text-xs h-12 border border-zinc-700"
-                      >
-                        <MessageSquare className="h-4 w-4 mr-2" />
-                        Send Buyout Proposal
-                      </Button>
-                    </>
+                    <span className="font-mono text-sm text-white">Active</span>
                   )}
                 </div>
-              ) : (
-                <div className="p-8 rounded-xl border border-zinc-800 bg-zinc-900/50 text-center relative overflow-hidden">
-                  <div className="absolute top-0 left-0 w-full h-1 bg-zinc-800" />
-                  <div className="h-14 w-14 rounded-full bg-zinc-800 flex items-center justify-center mx-auto mb-5">
-                    <Lock className="h-6 w-6 text-zinc-500" />
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="font-mono text-[11px] text-zinc-600 uppercase">Created</span>
+                <span className="font-mono text-sm text-white">
+                  {data.ownership?.creationDate ? new Date(data.ownership.creationDate).toLocaleDateString() : "Unknown"}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="font-mono text-[11px] text-zinc-600 uppercase">Expires</span>
+                <span className="font-mono text-sm text-white">
+                  {data.ownership?.expiryDate ? new Date(data.ownership.expiryDate).toLocaleDateString() : "Unknown"}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="font-mono text-[11px] text-zinc-600 uppercase">DNSSEC</span>
+                <span className="font-mono text-sm text-white uppercase">{data.ownership?.dnssec || "Unsigned"}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Card 3: Registrar Infrastructure */}
+        <Card className="flex flex-col">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-zinc-300">
+              <Globe className="h-4 w-4 text-emerald-400" />
+              Registrar Infrastructure
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex-1 space-y-4">
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="font-mono text-[11px] text-zinc-600 uppercase">Provider</span>
+                <span className="font-mono text-sm text-white">{data.ownership?.registrarName || "Internal Nexus"}</span>
+              </div>
+              {data.ownership?.registrarEmail && (
+                <div className="flex justify-between items-center">
+                  <span className="font-mono text-[11px] text-zinc-600 uppercase">Registrar Email</span>
+                  <a href={`mailto:${data.ownership.registrarEmail}`} className="font-mono text-sm text-blue-400/80 hover:text-blue-300 transition-colors truncate ml-4">
+                    {data.ownership.registrarEmail}
+                  </a>
+                </div>
+              )}
+              {data.ownership?.registrarUrl && (
+                <div className="flex justify-between items-center pt-2">
+                  <span className="font-mono text-[11px] text-zinc-600 uppercase">RDDS Service</span>
+                  <a 
+                    href={data.ownership.registrarUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="font-mono text-[10px] text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1 border border-blue-500/20 px-2 py-1 rounded bg-blue-500/5"
+                  >
+                    Visit Provider <ChevronRight className="h-3 w-3" />
+                  </a>
+                </div>
+              )}
+              <div className="flex justify-between items-start pt-2 border-t border-zinc-800/50">
+                <span className="font-mono text-[11px] text-zinc-600 uppercase mt-0.5">Nameservers</span>
+                <div className="flex flex-col items-end gap-1">
+                  {data.ownership?.nameservers && data.ownership.nameservers.length > 0 ? (
+                    data.ownership.nameservers.map((ns, idx) => (
+                      <span key={idx} className="font-mono text-[9px] text-zinc-500 lowercase">{ns}</span>
+                    ))
+                  ) : (
+                    <span className="font-mono text-sm text-zinc-600">None detected</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Card 4: Communications & Reach */}
+        <Card className="flex flex-col">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-zinc-300">
+              <Zap className="h-4 w-4 text-amber-400" />
+              Communications & Reach
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex-1 space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="font-mono text-[11px] text-zinc-600 uppercase">Mail Infrastructure</p>
+              <div className="flex items-center gap-2">
+                <div className={cn("h-2 w-2 rounded-full", data.ownership?.dnsIntelligence?.hasMail ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-zinc-800")} />
+                <span className="font-mono text-[10px] text-white">
+                  {data.ownership?.dnsIntelligence?.hasMail 
+                    ? data.ownership.dnsIntelligence.mailProvider 
+                    : "None"}
+                </span>
+              </div>
+            </div>
+
+            {data.ownership?.dnsIntelligence?.hasMail && (
+              <div className="space-y-2 pt-2 border-t border-zinc-800/50">
+                <p className="font-mono text-[10px] text-zinc-600 uppercase">Probable Routes</p>
+                <div className="flex flex-wrap gap-2">
+                  {['admin', 'info'].map(alias => (
+                    <Badge key={alias} variant="outline" className="font-mono text-[9px] border-zinc-800 bg-zinc-900/50 text-zinc-500">
+                      {alias}@{data.domain}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <Button 
+              variant="outline" 
+              className="w-full h-9 font-mono text-[10px] uppercase border-zinc-800 bg-zinc-950 hover:bg-zinc-800 text-zinc-500 mt-2"
+              onClick={() => {
+                const registrar = data.ownership?.registrarName?.toLowerCase() || '';
+                let url = `https://www.google.com/search?q=${encodeURIComponent(registrar + ' whois lookup')}`;
+                if (registrar.includes('hostinger')) url = 'https://www.hostinger.com/whois';
+                if (registrar.includes('godaddy')) url = 'https://whois.godaddy.com/';
+                if (registrar.includes('name.com')) url = 'https://www.name.com/whois';
+                if (registrar.includes('porkbun')) url = 'https://porkbun.com/whois';
+                window.open(url, '_blank');
+              }}
+            >
+              Manual RDDS Lookup
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Transaction / Buyout Card (Spans full width if needed or takes a slot) */}
+        <Card glow={isNexusOwned ? "blue" : undefined} className="md:col-span-2">
+          <CardContent className="py-8">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+              <div className="flex items-center gap-6">
+                <div className={cn("h-16 w-16 rounded-full flex items-center justify-center border", isNexusOwned ? "bg-blue-500/10 border-blue-500/20" : "bg-zinc-800 border-zinc-700")}>
+                  {isNexusOwned ? (
+                    <Handshake className="h-8 w-8 text-blue-400" />
+                  ) : (
+                    <Lock className="h-8 w-8 text-zinc-600" />
+                  )}
+                </div>
+                <div>
+                  <h4 className="font-mono text-sm font-bold text-white uppercase tracking-tight">
+                    {isNexusOwned ? "Secure Peer-to-Peer Transaction" : "External Asset Acquisition"}
+                  </h4>
+                  <p className="font-mono text-[11px] text-zinc-500 max-w-md mt-1">
+                    {isNexusOwned 
+                      ? "This domain is owned by a verified Nexus member. You can initiate a secure negotiation through our internal escrow system."
+                      : "This owner is not a Nexus member. Direct negotiation is restricted. You can watch this asset for future listings or drops."}
+                  </p>
+                </div>
+              </div>
+
+              <div className="shrink-0 w-full md:w-auto">
+                {isNexusOwned ? (
+                  <div className="flex flex-col items-center gap-3">
+                    {data.ownership?.isForSale && (
+                      <div className="text-center mb-1">
+                        <p className="font-mono text-[9px] text-zinc-600 uppercase">Asking Price</p>
+                        <p className="font-mono text-2xl font-bold text-white">₹{data.ownership.askingPrice?.toLocaleString("en-IN")}</p>
+                      </div>
+                    )}
+                    <Button
+                      onClick={() => onContact(data.domain)}
+                      className="w-full md:w-64 bg-blue-600 hover:bg-blue-500 text-white font-mono text-xs h-12 shadow-lg shadow-blue-900/20"
+                    >
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      Initiate Negotiation
+                    </Button>
                   </div>
-                  <p className="font-mono text-sm font-bold text-white mb-2 uppercase">
-                    External Asset
-                  </p>
-                  <p className="font-mono text-[11px] text-zinc-500 mb-8 leading-relaxed max-w-[240px] mx-auto">
-                    This domain owner is not a verified Nexus member. Direct
-                    peer-to-peer negotiation is currently restricted.
-                  </p>
+                ) : (
                   <Button
                     variant="outline"
                     onClick={() =>
@@ -574,16 +647,16 @@ function ResultsPanel({
                         ? removeFromWatchlist(data.domain)
                         : addToWatchlist(data.domain)
                     }
-                    className="w-full font-mono text-xs border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800 h-12"
+                    className="w-full md:w-64 font-mono text-xs border-zinc-800 text-zinc-500 hover:text-white hover:bg-zinc-800 h-12"
                   >
                     {inWatchlist ? "Monitoring Asset" : "Watch for Listing"}
                   </Button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 
@@ -705,7 +778,7 @@ export default function TerminalPage() {
         ".com", ".net", ".org", ".in", ".co.in", ".io", ".ai", ".co", ".dev", ".app", ".info", ".biz", ".tech", ".xyz", ".online", ".site",
         ".shop", ".store", ".blog", ".life", ".world", ".global", ".cloud", ".digital", ".agency", ".solutions", ".network", ".software", ".media", ".services",
         ".me", ".us", ".co.uk", ".ca", ".de", ".fr", ".jp", ".au", ".ru", ".ch", ".it", ".nl", ".se", ".no", ".es", ".br", ".mx", ".at", ".be", ".dk", ".fi", ".pt", ".pl", ".tr", ".kr", ".tw", ".hk", ".sg", ".my", ".th", ".id", ".ph", ".vn", ".ae", ".sa", ".qa", ".il",
-        ".top", ".test", ".icu", ".vip", ".club", ".win", ".bid", ".click", ".link", ".help", ".work", ".today", ".news", ".live", ".studio", ".design", ".expert", ".marketing", ".consulting", ".legal", ".finance", ".money", ".loan", ".credit", ".bank", ".insurance", ".events", ".party", ".wedding", ".family", ".yoga", ".fitness", ".health", ".clinic", ".doctor", ".hospital", ".vet", ".pet", ".dog", ".cat", ".farm", ".green", ".earth", ".garden", ".eco", ".bio", ".nature", ".space", ".science", ".education", ".academy", ".institute", ".center", ".gov", ".edu"
+        ".top", ".test", ".ac.in", ".icu", ".vip", ".club", ".win", ".bid", ".click", ".link", ".help", ".work", ".today", ".news", ".live", ".studio", ".design", ".expert", ".marketing", ".consulting", ".legal", ".finance", ".money", ".loan", ".credit", ".bank", ".insurance", ".events", ".party", ".wedding", ".family", ".yoga", ".fitness", ".health", ".clinic", ".doctor", ".hospital", ".vet", ".pet", ".dog", ".cat", ".farm", ".green", ".earth", ".garden", ".eco", ".bio", ".nature", ".space", ".science", ".education", ".academy", ".institute", ".center", ".gov", ".edu"
       ];
 
       if (!clean || parts.length < 2) {

@@ -57,6 +57,20 @@ export interface OwnershipInfo {
   registrarName?: string;
   registrarEmail?: string;
   registrarPhone?: string;
+  registrarUrl?: string;
+  registrarAbuseEmail?: string;
+  registrarAbusePhone?: string;
+  creationDate?: string;
+  expiryDate?: string;
+  status?: string[];
+  nameservers?: string[];
+  dnssec?: string;
+  address?: string;
+  dnsIntelligence?: {
+    hasMail: boolean;
+    mailProvider: string;
+    mxRecords: string[];
+  };
   isForSale?: boolean;
   askingPrice?: number;
   lastUpdated: string;

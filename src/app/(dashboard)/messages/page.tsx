@@ -123,9 +123,9 @@ useEffect(() => {
                   </div>
                   {/* Logic: Only show badge if status is NOT 'open' to reduce noise, 
       or keep it if you want consistent state visibility */}
-                  {inquiry.status && inquiry.status !== "closed" && (
+                  {inquiry.status && (
                     <Badge
-                      variant="outline"
+                      variant={inquiry.status === "open" ? "accent" : "outline"}
                       className="hidden sm:inline-flex uppercase text-[9px]"
                     >
                       {inquiry.status}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Send, DollarSign, MessageSquare } from "lucide-react";
+import { X, Send, IndianRupee, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { apiClient } from "@/services/config";
@@ -84,10 +84,10 @@ export function InquiryModal({ domain, onClose }: InquiryModalProps) {
               </div>
               <div>
                 <label className="block font-mono text-[10px] text-zinc-600 uppercase mb-2">
-                  Offer Price (Optional)
+                  *Offer Price
                 </label>
                 <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-600" />
+                  <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-600" />
                   <input
                     type="number"
                     value={offerPrice}

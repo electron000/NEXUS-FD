@@ -38,7 +38,7 @@ const NAV_ITEMS = [
   },
   {
     href: "/portfolio",
-    label: "My Portfolio",
+    label: "My Sale Portfolio",
     icon: Briefcase,
     id: "portfolio",
     desc: "- Ownership & KYC",
