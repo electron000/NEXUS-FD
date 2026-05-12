@@ -42,6 +42,7 @@ export interface RegistrarPricing {
   transfer: number;
   privacy: number;
   available: boolean;
+  premium?: boolean;
   affiliateUrl: string;
   isLive?: boolean;
   currency?: string;

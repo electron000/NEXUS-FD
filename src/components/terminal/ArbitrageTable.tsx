@@ -10,7 +10,7 @@ import {
   type SortingState,
 } from "@tanstack/react-table";
 import { useState } from "react";
-import { ArrowUpDown, ArrowUp, ArrowDown, ExternalLink, Check, X, Shield, ShieldOff } from "lucide-react";
+import { ArrowUpDown, ArrowUp, ArrowDown, ExternalLink, Check, X, Shield, ShieldOff, AlertTriangle } from "lucide-react";
 import type { RegistrarPricing } from "@/types";
 
 import {
@@ -59,7 +59,15 @@ export function ArbitrageTable({ data }: ArbitrageTableProps) {
       accessorKey: "registrar",
       header: "Registrar",
       cell: ({ row }) => (
-        <RegistrarBadge name={row.original.registrar} slug={row.original.logoSlug} />
+        <div className="flex items-center gap-2">
+          <RegistrarBadge name={row.original.registrar} slug={row.original.logoSlug} />
+          {row.original.premium && (
+            <span className="inline-flex items-center gap-1 rounded-md border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase tracking-wider text-amber-400">
+              <AlertTriangle className="h-2.5 w-2.5" />
+              Premium
+            </span>
+          )}
+        </div>
       ),
     },
     {
@@ -76,7 +84,8 @@ export function ArbitrageTable({ data }: ArbitrageTableProps) {
       cell: ({ row }) => {
         const val = row.original.registration;
         const currency = row.original.currency || 'USD';
-        const isCheapest = val > 0 && val === minReg;
+        const isAvailable = row.original.available;
+        const isCheapest = val > 0 && val === minReg && isAvailable;
         
         return (
           <div className="flex flex-col">
@@ -84,6 +93,11 @@ export function ArbitrageTable({ data }: ArbitrageTableProps) {
               {val === 0 ? <span className="text-zinc-600">—</span> : `${currency === 'INR' ? '₹' : '$'}${val.toFixed(2)}`}
               {isCheapest && <span className="ml-1 text-[9px] text-emerald-500 font-bold tracking-tighter">▼ BEST</span>}
             </span>
+            {val > 0 && (
+              <span className={cn("font-mono text-[8px] mt-0.5", row.original.premium ? "text-amber-400" : "text-blue-400")}>
+                {row.original.premium ? "Premium Price" : "Tax Excluded"}
+              </span>
+            )}
           </div>
         );
       },
@@ -102,12 +116,18 @@ export function ArbitrageTable({ data }: ArbitrageTableProps) {
       cell: ({ row }) => {
         const val = row.original.renewal;
         const currency = row.original.currency || 'USD';
-        const isCheapest = val === minRenewal;
+        const isAvailable = row.original.available;
+        const isCheapest = val === minRenewal && isAvailable;
         return (
-          <span className={cn("font-mono text-xs", isCheapest ? "text-emerald-400 font-semibold" : "text-zinc-300")}>
-            {currency === 'INR' ? '₹' : '$'}{val.toFixed(2)}/yr
-            {isCheapest && <span className="ml-1 text-[9px] text-emerald-500 font-bold tracking-tighter">▼ BEST</span>}
-          </span>
+          <div className="flex flex-col">
+            <span className={cn("font-mono text-xs", isCheapest ? "text-emerald-400 font-semibold" : "text-zinc-300")}>
+              {currency === 'INR' ? '₹' : '$'}{val.toFixed(2)}/yr
+              {isCheapest && <span className="ml-1 text-[9px] text-emerald-500 font-bold tracking-tighter">▼ BEST</span>}
+            </span>
+            <span className={cn("font-mono text-[8px] mt-0.5", row.original.premium ? "text-amber-400" : "text-blue-400")}>
+              {row.original.premium ? "Premium Price" : "Tax Excluded"}
+            </span>
+          </div>
         );
       },
     },
@@ -116,10 +136,14 @@ export function ArbitrageTable({ data }: ArbitrageTableProps) {
       header: "Transfer",
       cell: ({ row }) => {
         const currency = row.original.currency || 'USD';
+        const val = row.original.transfer;
         return (
-          <span className="font-mono text-xs text-zinc-400">
-            {row.original.transfer === 0 ? <span className="text-zinc-600">—</span> : `${currency === 'INR' ? '₹' : '$'}${row.original.transfer.toFixed(2)}`}
-          </span>
+          <div className="flex flex-col">
+            <span className="font-mono text-xs text-zinc-400">
+              {val === 0 ? <span className="text-zinc-600">—</span> : `${currency === 'INR' ? '₹' : '$'}${val.toFixed(2)}`}
+            </span>
+            {val > 0 && <span className="font-mono text-[8px] text-blue-400 mt-0.5">Tax Excluded</span>}
+          </div>
         );
       },
     },
@@ -130,20 +154,23 @@ export function ArbitrageTable({ data }: ArbitrageTableProps) {
         const val = row.original.privacy;
         const currency = row.original.currency || 'USD';
         return (
-          <div className="flex items-center gap-1.5">
-            {val === 0 ? (
-               <>
-                 <Shield className="h-3 w-3 text-emerald-400" />
-                 <span className="font-mono text-[10px] text-emerald-400 uppercase font-bold tracking-tighter">Included</span>
-               </>
-            ) : (
-               <>
-                 <ShieldOff className="h-3 w-3 text-zinc-600" />
-                 <span className="font-mono text-xs text-zinc-500">
-                   {currency === 'INR' ? '₹' : '$'}{val.toFixed(2)}
-                 </span>
-               </>
-            )}
+          <div className="flex flex-col">
+            <div className="flex items-center gap-1.5">
+              {val === 0 ? (
+                 <>
+                   <Shield className="h-3 w-3 text-emerald-400" />
+                   <span className="font-mono text-[10px] text-emerald-400 uppercase font-bold tracking-tighter">Included</span>
+                 </>
+              ) : (
+                 <>
+                   <ShieldOff className="h-3 w-3 text-zinc-600" />
+                   <span className="font-mono text-xs text-zinc-500">
+                     {currency === 'INR' ? '₹' : '$'}{val.toFixed(2)}
+                   </span>
+                 </>
+              )}
+            </div>
+            {val > 0 && <span className="font-mono text-[8px] text-blue-400 mt-0.5">Tax Excluded</span>}
           </div>
         );
       },

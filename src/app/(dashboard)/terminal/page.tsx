@@ -587,7 +587,7 @@ function ResultsPanel({
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="font-mono text-[11px] text-zinc-600 uppercase">Provider</span>
-                  <span className="font-mono text-sm text-white">{data.ownership?.registrarName || "Internal Nexus"}</span>
+                  <span className="font-mono text-sm text-white">{data.ownership?.registrarName || "N/A"}</span>
                 </div>
                 {data.ownership?.registrarEmail && (
                   <div className="flex justify-between items-center">
@@ -803,7 +803,7 @@ export default function TerminalPage() {
         ".com", ".net", ".org", ".in", ".co.in", ".io", ".ai", ".co", ".dev", ".app", ".info", ".biz", ".tech", ".xyz", ".online", ".site",
         ".shop", ".store", ".blog", ".life", ".world", ".global", ".cloud", ".digital", ".agency", ".solutions", ".network", ".software", ".media", ".services",
         ".me", ".us", ".co.uk", ".ca", ".de", ".fr", ".jp", ".au", ".ru", ".ch", ".it", ".nl", ".se", ".no", ".es", ".br", ".mx", ".at", ".be", ".dk", ".fi", ".pt", ".pl", ".tr", ".kr", ".tw", ".hk", ".sg", ".my", ".th", ".id", ".ph", ".vn", ".ae", ".sa", ".qa", ".il",
-        ".top", ".test", ".ac.in", ".icu", ".vip", ".club", ".win", ".bid", ".click", ".link", ".help", ".work", ".today", ".news", ".live", ".studio", ".design", ".expert", ".marketing", ".consulting", ".legal", ".finance", ".money", ".loan", ".credit", ".bank", ".insurance", ".events", ".party", ".wedding", ".family", ".yoga", ".fitness", ".health", ".clinic", ".doctor", ".hospital", ".vet", ".pet", ".dog", ".cat", ".farm", ".green", ".earth", ".garden", ".eco", ".bio", ".nature", ".space", ".science", ".education", ".academy", ".institute", ".center", ".gov", ".edu"
+        ".top", ".test", ".inc", ".ac.in", ".icu", ".vip", ".club", ".win", ".bid", ".click", ".link", ".help", ".work", ".today", ".news", ".live", ".studio", ".design", ".expert", ".marketing", ".consulting", ".legal", ".finance", ".money", ".loan", ".credit", ".bank", ".insurance", ".events", ".party", ".wedding", ".family", ".yoga", ".fitness", ".health", ".clinic", ".doctor", ".hospital", ".vet", ".pet", ".dog", ".cat", ".farm", ".green", ".earth", ".garden", ".eco", ".bio", ".nature", ".space", ".science", ".education", ".academy", ".institute", ".center", ".gov", ".edu"
       ];
 
       if (!clean || parts.length < 2) {
