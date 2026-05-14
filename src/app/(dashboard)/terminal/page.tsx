@@ -6,7 +6,6 @@ import {
   Search,
   Bookmark,
   BookmarkCheck,
-  Tag,
   Clock,
   ChevronRight,
   Info,
@@ -725,7 +724,7 @@ function ResultsPanel({
               <p className="font-mono text-[11px] text-zinc-500 leading-relaxed max-w-3xl">
                 {data.summary}
               </p>
-              <div className="flex flex-wrap gap-2 mt-3">
+              {/* <div className="flex flex-wrap gap-2 mt-3">
                 {data.tags.map((tag: string) => (
                   <span
                     key={tag}
@@ -735,7 +734,7 @@ function ResultsPanel({
                     {tag}
                   </span>
                 ))}
-              </div>
+              </div> */}
             </div>
 
             <div className="flex items-center gap-2 shrink-0">

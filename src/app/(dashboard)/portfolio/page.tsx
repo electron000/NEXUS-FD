@@ -14,8 +14,6 @@ import {
   Upload,
   FileCheck,
   ArrowRight,
-  User as UserIcon,
-  Home,
   X,
   Trash2,
   Copy,
@@ -27,7 +25,6 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -653,7 +650,7 @@ export default function PortfolioPage() {
                               name="firstName"
                               value={formData.firstName}
                               onChange={handleInputChange}
-                              placeholder="John"
+                              placeholder="Arun"
                               className="bg-black/40 border-zinc-800 text-white"
                             />
                           </div>
@@ -677,7 +674,7 @@ export default function PortfolioPage() {
                               name="lastName"
                               value={formData.lastName}
                               onChange={handleInputChange}
-                              placeholder="Doe"
+                              placeholder="Changkakoty"
                               className="bg-black/40 border-zinc-800 text-white"
                             />
                           </div>
@@ -695,7 +692,7 @@ export default function PortfolioPage() {
                                 name="fatherName"
                                 value={formData.fatherName}
                                 onChange={handleInputChange}
-                                placeholder="Robert Doe"
+                                placeholder="Tapan"
                                 className="bg-black/40 border-zinc-800 text-white"
                               />
                             </div>
@@ -707,7 +704,7 @@ export default function PortfolioPage() {
                                 name="motherName"
                                 value={formData.motherName}
                                 onChange={handleInputChange}
-                                placeholder="Mary Doe"
+                                placeholder="Purabi"
                                 className="bg-black/40 border-zinc-800 text-white"
                               />
                             </div>
@@ -731,7 +728,7 @@ export default function PortfolioPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in duration-300">
                           <div className="space-y-3">
                             <label className="font-mono text-[10px] text-zinc-500 uppercase ml-1">
-                              Document Front Side
+                              Aadhaar Front Side
                             </label>
                             <div
                               className={cn(
@@ -877,7 +874,7 @@ export default function PortfolioPage() {
       )}
       {/* Action Modal (Delete / Verify Success / DNS Guide) */}
       {actionModal.isOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="w-full max-w-md bg-zinc-950 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
             {actionModal.type === "dns_guide" ? (
               <>
