@@ -80,7 +80,7 @@ export async function verifyOTP(email: string, otp: string): Promise<{ success: 
  * Credentials handled automatically via cookies.
  */
 export async function getCurrentUser() {
-  return apiClient.get('/api/auth/me');
+  return apiClient.get(`/api/auth/me?t=${Date.now()}`);
 }
 
 export async function loginUser(email: string, password: string) {

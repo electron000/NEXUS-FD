@@ -113,11 +113,11 @@ export function PortfolioTable({ data }: PortfolioTableProps) {
       transition={{ delay: 0.4, duration: 0.5 }}
       className="space-y-4"
     >
-      <div className="flex items-center justify-between px-2">
-        <h2 className="font-mono text-xs font-bold text-zinc-500 uppercase tracking-[0.2em]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-2">
+        <h2 className="font-mono text-[10px] sm:text-xs font-bold text-zinc-500 uppercase tracking-[0.2em]">
           Verified Assets & Valuations
         </h2>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
           {userProfile?.kyc_status !== "verified" &&
             userProfile?.kyc_status !== "pending" && (
               <button
@@ -125,27 +125,24 @@ export function PortfolioTable({ data }: PortfolioTableProps) {
                   setStep(0);
                   setIsKycModalOpen(true);
                 }}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 hover:border-amber-500/50 transition-all group"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-3 py-2 sm:py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 hover:border-amber-500/50 transition-all group"
               >
                 <ShieldCheck className="h-3 w-3 text-amber-500" />
-                <span className="font-mono text-[10px] font-bold text-amber-500/80 uppercase tracking-[0.2em] group-hover:text-amber-400">
+                <span className="font-mono text-[9px] sm:text-[10px] font-bold text-amber-500/80 uppercase tracking-[0.15em] group-hover:text-amber-400">
                   {userProfile?.kyc_status === "rejected"
-                    ? "Re-verify Identity"
-                    : "Become a Verified Seller"}
+                    ? "Re-verify"
+                    : "Become Verified"}
                 </span>
               </button>
             )}
 
           <button
             onClick={() => setIsGuideOpen(true)}
-            className="flex items-center gap-1.5 font-mono text-[10px] font-bold text-zinc-500 hover:text-blue-400 uppercase tracking-widest transition-colors group"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-3 py-2 sm:py-1.5 rounded-lg border border-zinc-800 bg-zinc-900/30 font-mono text-[9px] sm:text-[10px] font-bold text-zinc-500 hover:text-blue-400 hover:border-blue-500/30 uppercase tracking-widest transition-all group"
           >
             <Info className="h-3 w-3 text-zinc-600 group-hover:text-blue-400 transition-colors" />
-            DNS Verification Guide
+            Verification Guide
           </button>
-          <span className="font-mono text-[10px] text-zinc-600 uppercase">
-            Live Market Estimations
-          </span>
         </div>
       </div>
 
@@ -179,95 +176,162 @@ export function PortfolioTable({ data }: PortfolioTableProps) {
         </div>
       )}
 
-      <Card className="overflow-hidden border-zinc-800/50 bg-zinc-950/50 backdrop-blur-md shadow-2xl">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-zinc-800/50 bg-zinc-900/30">
-                <th className="p-4 font-mono text-[10px] uppercase tracking-wider text-zinc-500">
-                  Domain Asset
-                </th>
-                <th className="p-4 font-mono text-[10px] uppercase tracking-wider text-zinc-500 text-right">
-                  Bought Price
-                </th>
-                <th className="p-4 font-mono text-[10px] uppercase tracking-wider text-zinc-500 text-right">
-                  Nexus Valuation
-                </th>
-                <th className="p-4 font-mono text-[10px] uppercase tracking-wider text-zinc-500 text-right">
-                  Total Growth
-                </th>
-                <th className="p-4 font-mono text-[10px] uppercase tracking-wider text-zinc-500 text-center">
-                  Status
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-800/30">
-              {data.map((item, idx) => (
-                <motion.tr
-                  key={item.domain}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.5 + idx * 0.05 }}
-                  className="group hover:bg-white/2 transition-colors cursor-default"
-                >
-                  <td className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-lg bg-zinc-900 flex items-center justify-center border border-zinc-800 group-hover:border-blue-500/50 transition-colors">
-                        <span className="text-[10px] font-bold text-zinc-400 uppercase">
-                          {item.domain.charAt(0)}
+      <div className="hidden md:block">
+        <Card className="overflow-hidden border-zinc-800/50 bg-zinc-950/50 backdrop-blur-md shadow-2xl">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-zinc-800/50 bg-zinc-900/30">
+                  <th className="p-4 font-mono text-[10px] uppercase tracking-wider text-zinc-500">
+                    Domain Asset
+                  </th>
+                  <th className="p-4 font-mono text-[10px] uppercase tracking-wider text-zinc-500 text-right">
+                    Bought Price
+                  </th>
+                  <th className="p-4 font-mono text-[10px] uppercase tracking-wider text-zinc-500 text-right">
+                    Nexus Valuation
+                  </th>
+                  <th className="p-4 font-mono text-[10px] uppercase tracking-wider text-zinc-500 text-right">
+                    Total Growth
+                  </th>
+                  <th className="p-4 font-mono text-[10px] uppercase tracking-wider text-zinc-500 text-center">
+                    Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-800/30">
+                {data.map((item, idx) => (
+                  <motion.tr
+                    key={item.domain}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.5 + idx * 0.05 }}
+                    className="group hover:bg-white/2 transition-colors cursor-default"
+                  >
+                    <td className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-lg bg-zinc-900 flex items-center justify-center border border-zinc-800 group-hover:border-blue-500/50 transition-colors">
+                          <span className="text-[10px] font-bold text-zinc-400 uppercase">
+                            {item.domain.charAt(0)}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="font-mono text-sm font-bold text-white tracking-tight flex items-center gap-2">
+                            {item.domain}
+                            <ArrowUpRight className="h-3 w-3 text-zinc-700 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
+                          <div className="text-[9px] text-zinc-600 font-mono uppercase tracking-tighter">
+                            Verified Ownership
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-4 text-right">
+                      <div className="font-mono text-sm text-zinc-400">
+                        ₹{item.boughtPrice.toLocaleString("en-IN")}
+                      </div>
+                    </td>
+                    <td className="p-4 text-right">
+                      <div className="font-mono text-sm font-bold text-white">
+                        ₹{item.valuation.toLocaleString("en-IN")}
+                      </div>
+                      <div className="text-[9px] text-zinc-600 font-mono uppercase tracking-tighter">
+                        Model Prediction
+                      </div>
+                    </td>
+                    <td className="p-4 text-right">
+                      <div
+                        className={`flex items-center justify-end gap-1 font-mono text-sm font-bold ${item.growth >= 0 ? "text-emerald-400" : "text-red-400"}`}
+                      >
+                        {item.growth >= 0 ? (
+                          <TrendingUp className="h-3 w-3" />
+                        ) : (
+                          <TrendingDown className="h-3 w-3" />
+                        )}
+                        {item.growth >= 0 ? "+" : ""}
+                        {item.growth.toFixed(2)}%
+                      </div>
+                    </td>
+                    <td className="p-4 text-center">
+                      <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="text-[9px] font-mono font-bold text-emerald-500 uppercase tracking-widest">
+                          Active
                         </span>
                       </div>
-                      <div>
-                        <div className="font-mono text-sm font-bold text-white tracking-tight flex items-center gap-2">
-                          {item.domain}
-                          <ArrowUpRight className="h-3 w-3 text-zinc-700 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </div>
-                        <div className="text-[9px] text-zinc-600 font-mono uppercase tracking-tighter">
-                          Verified Ownership
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-4 text-right">
-                    <div className="font-mono text-sm text-zinc-400">
-                      ₹{item.boughtPrice.toLocaleString("en-IN")}
-                    </div>
-                  </td>
-                  <td className="p-4 text-right">
-                    <div className="font-mono text-sm font-bold text-white">
-                      ₹{item.valuation.toLocaleString("en-IN")}
-                    </div>
-                    <div className="text-[9px] text-zinc-600 font-mono uppercase tracking-tighter">
-                      Model Prediction
-                    </div>
-                  </td>
-                  <td className="p-4 text-right">
-                    <div
-                      className={`flex items-center justify-end gap-1 font-mono text-sm font-bold ${item.growth >= 0 ? "text-emerald-400" : "text-red-400"}`}
-                    >
-                      {item.growth >= 0 ? (
-                        <TrendingUp className="h-3 w-3" />
-                      ) : (
-                        <TrendingDown className="h-3 w-3" />
-                      )}
-                      {item.growth >= 0 ? "+" : ""}
-                      {item.growth.toFixed(2)}%
-                    </div>
-                  </td>
-                  <td className="p-4 text-center">
-                    <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-4">
+        {data.map((item, idx) => (
+          <motion.div
+            key={item.domain}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 * idx }}
+          >
+            <Card className="border-zinc-800/50 bg-zinc-950/40 backdrop-blur-sm p-4">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-zinc-900 flex items-center justify-center border border-zinc-800">
+                    <span className="text-xs font-bold text-zinc-400 uppercase">
+                      {item.domain.charAt(0)}
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="font-mono text-sm font-bold text-white tracking-tight">
+                      {item.domain}
+                    </h3>
+                    <div className="flex items-center gap-1.5 mt-0.5">
                       <div className="h-1 w-1 rounded-full bg-emerald-500 animate-pulse" />
-                      <span className="text-[9px] font-mono font-bold text-emerald-500 uppercase tracking-widest">
-                        Active
+                      <span className="text-[9px] font-mono text-emerald-500 uppercase tracking-widest">
+                        Active Asset
                       </span>
                     </div>
-                  </td>
-                </motion.tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+                  </div>
+                </div>
+                <div
+                  className={`flex items-center gap-1 font-mono text-xs font-bold ${item.growth >= 0 ? "text-emerald-400" : "text-red-400"}`}
+                >
+                  {item.growth >= 0 ? (
+                    <TrendingUp className="h-3 w-3" />
+                  ) : (
+                    <TrendingDown className="h-3 w-3" />
+                  )}
+                  {item.growth >= 0 ? "+" : ""}
+                  {item.growth.toFixed(1)}%
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-zinc-800/30">
+                <div>
+                  <p className="font-mono text-[9px] text-zinc-600 uppercase tracking-widest mb-1">
+                    Entry Price
+                  </p>
+                  <p className="font-mono text-sm text-zinc-300">
+                    ₹{item.boughtPrice.toLocaleString("en-IN")}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="font-mono text-[9px] text-zinc-600 uppercase tracking-widest mb-1">
+                    Nexus Valuation
+                  </p>
+                  <p className="font-mono text-sm font-bold text-white">
+                    ₹{item.valuation.toLocaleString("en-IN")}
+                  </p>
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
 
       <div className="flex items-center gap-4 px-2 text-[9px] font-mono text-zinc-600 uppercase tracking-widest">
         <span className="flex items-center gap-1">
@@ -287,14 +351,14 @@ export function PortfolioTable({ data }: PortfolioTableProps) {
       {/* DNS Guide Modal */}
       <AnimatePresence>
         {isGuideOpen && (
-          <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[100] flex items-start md:items-center justify-center bg-black/80 backdrop-blur-sm md:p-4">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
+              initial={{ opacity: 0, scale: 1 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-md bg-zinc-950 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden"
+              exit={{ opacity: 0, scale: 1 }}
+              className="w-full h-full md:h-auto md:max-w-md bg-zinc-950 border-zinc-800 md:border md:rounded-xl rounded-none shadow-2xl overflow-y-auto"
             >
-              <div className="p-4 border-b border-zinc-800/50 bg-zinc-900/30 flex items-center justify-between">
+              <div className="p-4 border-b border-zinc-800/50 bg-zinc-900/30 flex items-center justify-between sticky top-0 z-10 backdrop-blur-md">
                 <div className="flex items-center gap-2">
                   <div className="h-6 w-6 rounded bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
                     <Globe className="h-3.5 w-3.5 text-blue-400" />
@@ -369,12 +433,12 @@ export function PortfolioTable({ data }: PortfolioTableProps) {
       {/* KYC Modal */}
       <AnimatePresence>
         {isKycModalOpen && (
-          <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[100] flex items-start md:items-center justify-center bg-black/80 backdrop-blur-sm md:p-4">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
+              initial={{ opacity: 0, scale: 1 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-2xl"
+              exit={{ opacity: 0, scale: 1 }}
+              className="w-full h-full md:h-auto md:max-w-2xl overflow-y-auto"
             >
               {kycStatus === "success" ? (
                 <Card className="border-emerald-500/30 bg-zinc-950 shadow-2xl">
@@ -400,8 +464,8 @@ export function PortfolioTable({ data }: PortfolioTableProps) {
                   </CardContent>
                 </Card>
               ) : (
-                <Card className="border-zinc-800 bg-zinc-950 shadow-2xl overflow-hidden">
-                  <CardHeader className="border-b border-zinc-800/50 bg-zinc-900/20">
+                <Card className="border-zinc-800 bg-zinc-950 shadow-2xl overflow-hidden md:rounded-xl rounded-none h-full md:h-auto">
+                  <CardHeader className="border-b border-zinc-800/50 bg-zinc-900/20 sticky top-0 z-10 backdrop-blur-md">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="h-8 w-8 rounded-lg bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
@@ -680,7 +744,7 @@ export function PortfolioTable({ data }: PortfolioTableProps) {
                           onClick={() => setStep(step + 1)}
                           className="bg-purple-600 hover:bg-purple-700 text-white px-8 font-mono text-[10px] uppercase tracking-widest"
                         >
-                          {step === 0 ? "Start Verification" : "Next"}{" "}
+                          {step === 0 ? "Start" : "Next"}{" "}
                           <ArrowRight className="h-3.5 w-3.5 ml-2" />
                         </Button>
                       ) : (

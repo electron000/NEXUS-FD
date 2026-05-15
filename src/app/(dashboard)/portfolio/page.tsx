@@ -276,29 +276,29 @@ export default function PortfolioPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3 self-start sm:self-auto">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
             {userProfile?.kyc_status !== "verified" && userProfile?.kyc_status !== "pending" && (
               <button
                 onClick={() => {
                   setStep(0);
                   setIsKycModalOpen(true);
                 }}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 hover:border-amber-500/50 transition-all group"
+                className="flex items-center justify-center gap-2 px-3 py-2 sm:py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 hover:border-amber-500/50 transition-all group"
               >
                 <ShieldCheck className="h-3.5 w-3.5 text-amber-500" />
-                <span className="font-mono text-[10px] font-bold text-amber-500/80 uppercase tracking-[0.2em] group-hover:text-amber-400">
-                  {userProfile?.kyc_status === "rejected" ? "Re-verify Identity" : "Become a Verified Seller"}
+                <span className="font-mono text-[9px] sm:text-[10px] font-bold text-amber-500/80 uppercase tracking-[0.15em] group-hover:text-amber-400">
+                  {userProfile?.kyc_status === "rejected" ? "Re-verify" : "Become Verified"}
                 </span>
               </button>
             )}
 
             <button
               onClick={() => setActionModal({ isOpen: true, type: "dns_guide" })}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900/50 hover:bg-zinc-800 hover:border-zinc-700 transition-all group"
+              className="flex items-center justify-center gap-2 px-3 py-2 sm:py-1.5 rounded-lg border border-zinc-800 bg-zinc-900/50 hover:bg-zinc-800 hover:border-zinc-700 transition-all group"
             >
               <Info className="h-3.5 w-3.5 text-blue-400" />
-              <span className="font-mono text-[10px] font-bold text-zinc-400 uppercase tracking-[0.2em] group-hover:text-white">
-                DNS Verification Guide
+              <span className="font-mono text-[9px] sm:text-[10px] font-bold text-zinc-400 uppercase tracking-[0.15em] group-hover:text-white">
+                DNS Guide
               </span>
             </button>
           </div>
@@ -396,10 +396,10 @@ export default function PortfolioPage() {
                   <Plus className="h-5 w-5 text-white" />
                 </div>
               </div>
-              <h3 className="font-mono text-lg font-bold text-white mb-2">
+              <h3 className="font-mono text-lg font-bold text-white mb-2 text-center">
                 Build Your Digital Portfolio
               </h3>
-              <p className="font-mono text-xs text-zinc-500 text-center max-w-sm mb-8 leading-relaxed">
+              <p className="font-mono text-xs text-zinc-500 text-center max-w-sm mx-auto mb-8 leading-relaxed">
                 Connect your domains to the NEXUS Intelligence Core. Verified
                 assets gain institutional visibility.
               </p>
@@ -522,9 +522,9 @@ export default function PortfolioPage() {
 
       {/* Embedded Full-Screen KYC Modal */}
       {isKycModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="w-full max-w-3xl bg-[#09090b] border border-zinc-800 rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
-            <div className="flex items-center justify-between p-4 border-b border-zinc-800/50 bg-zinc-950 shrink-0">
+        <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-0 sm:p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full h-full sm:h-auto sm:max-h-[95vh] sm:max-w-3xl bg-[#09090b] border-zinc-800 sm:border rounded-none sm:rounded-xl shadow-2xl overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-zinc-800/50 bg-zinc-950 shrink-0 sticky top-0 z-10">
               <h2 className="text-lg font-bold text-white tracking-tight">
                 Become a Verified Seller
               </h2>
@@ -832,7 +832,7 @@ export default function PortfolioPage() {
                             onClick={() => setStep(step + 1)}
                             className="bg-purple-600 hover:bg-purple-700 text-white px-8 font-mono text-[10px] uppercase tracking-widest"
                           >
-                            {step === 0 ? "Start Verification" : "Next"} <ArrowRight className="h-3.5 w-3.5 ml-2" />
+                            {step === 0 ? "Start" : "Next"} <ArrowRight className="h-3.5 w-3.5 ml-2" />
                           </Button>
                         ) : (
                           <Button
@@ -874,8 +874,8 @@ export default function PortfolioPage() {
       )}
       {/* Action Modal (Delete / Verify Success / DNS Guide) */}
       {actionModal.isOpen && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="w-full max-w-md bg-zinc-950 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-60 flex items-start sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full h-full sm:h-auto sm:max-w-md bg-zinc-950 border-zinc-800 sm:border rounded-none sm:rounded-xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
             {actionModal.type === "dns_guide" ? (
               <>
                 <div className="p-4 border-b border-zinc-800/50 bg-zinc-900/30 flex items-center justify-between">

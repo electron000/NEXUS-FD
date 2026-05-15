@@ -119,11 +119,13 @@ function ResultsPanel({
   onContact: (domain: string) => void;
   setMode: (mode: TerminalMode) => void;
 }) {
-  const { addToWatchlist, removeFromWatchlist, isInWatchlist } = useAppStore();
+  const { addToWatchlist, removeFromWatchlist, isInWatchlist, userProfile } = useAppStore();
   const inWatchlist = isInWatchlist(data.domain);
 
-  const isAvailable = data.ownership?.registered !== undefined ? !data.ownership.registered : data.pricing.some((p) => p.available);
-  const isNexusOwned = data.ownership?.isNexusMember === true;
+  const isNexusOwned = data.ownership?.isNexusMember === true || data.ownership?.isForSale === true;
+  const isAvailable = (data.ownership?.registered !== undefined ? !data.ownership.registered : data.pricing.some((p) => p.available)) && !isNexusOwned;
+  const isOwner = !!(userProfile?.email && data.ownership?.ownerEmail && 
+                  userProfile.email.toLowerCase() === data.ownership.ownerEmail.toLowerCase());
 
   // 1. ACQUISITION VIEW
   const renderAcquisition = () => (
@@ -278,9 +280,13 @@ function ResultsPanel({
             {isNexusOwned && !isAvailable && (
               <Button
                 onClick={() => onContact(data.domain)}
-                className="mt-6 bg-purple-600 hover:bg-purple-700 text-white font-mono text-[10px] h-9 px-6 uppercase"
+                disabled={isOwner}
+                className={cn(
+                  "mt-6 font-mono text-[10px] h-9 px-6 uppercase",
+                  isOwner ? "bg-zinc-800 text-zinc-500 border-zinc-700 cursor-not-allowed" : "bg-purple-600 hover:bg-purple-700 text-white"
+                )}
               >
-                Initiate Peer-to-Peer Offer
+                {isOwner ? "You Own This Asset" : "Initiate Peer-to-Peer Offer"}
               </Button>
             )}
             {!isNexusOwned && !isAvailable && (
@@ -458,10 +464,16 @@ function ResultsPanel({
                   )}
                   <Button
                     onClick={() => onContact(data.domain)}
-                    className="w-full md:w-64 bg-blue-600 hover:bg-blue-500 text-white font-mono text-xs h-12 shadow-lg shadow-blue-900/20"
+                    disabled={isOwner}
+                    className={cn(
+                      "w-full md:w-64 font-mono text-xs h-12 shadow-lg transition-all",
+                      isOwner 
+                        ? "bg-zinc-900 text-zinc-600 border border-zinc-800 cursor-not-allowed" 
+                        : "bg-blue-600 hover:bg-blue-500 text-white shadow-blue-900/20"
+                    )}
                   >
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Initiate Negotiation
+                    {isOwner ? <ShieldCheck className="h-4 w-4 mr-2" /> : <MessageSquare className="h-4 w-4 mr-2" />}
+                    {isOwner ? "You Own This Asset" : "Initiate Negotiation"}
                   </Button>
                 </div>
               ) : (
@@ -497,33 +509,33 @@ function ResultsPanel({
             </CardHeader>
             <CardContent className="flex-1 space-y-4">
               <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="font-mono text-[11px] text-zinc-600 uppercase">Owner</span>
-                  <span className="font-mono text-sm text-white font-medium truncate ml-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4">
+                  <span className="font-mono text-[10px] sm:text-[11px] text-zinc-600 uppercase">Owner</span>
+                  <span className="font-mono text-xs sm:text-sm text-white font-medium break-all sm:truncate sm:ml-4 sm:text-right">
                     {data.ownership?.ownerName || data.ownership?.organization || "Redacted"}
                   </span>
                 </div>
                 {data.ownership?.organization && data.ownership?.ownerName && (
-                  <div className="flex justify-between items-center">
-                    <span className="font-mono text-[11px] text-zinc-600 uppercase">Organization</span>
-                    <span className="font-mono text-sm text-white truncate ml-4">{data.ownership.organization}</span>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4">
+                    <span className="font-mono text-[10px] sm:text-[11px] text-zinc-600 uppercase">Organization</span>
+                    <span className="font-mono text-xs sm:text-sm text-white break-all sm:truncate sm:ml-4 sm:text-right">{data.ownership.organization}</span>
                   </div>
                 )}
                 {data.ownership?.ownerEmail && (
-                  <div className="flex justify-between items-center">
-                    <span className="font-mono text-[11px] text-zinc-600 uppercase">Owner Email</span>
-                    <a href={`mailto:${data.ownership.ownerEmail}`} className="font-mono text-sm text-blue-400 hover:text-blue-300 transition-colors truncate ml-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4">
+                    <span className="font-mono text-[10px] sm:text-[11px] text-zinc-600 uppercase">Owner Email</span>
+                    <a href={`mailto:${data.ownership.ownerEmail}`} className="font-mono text-xs sm:text-sm text-blue-400 hover:text-blue-300 transition-colors break-all sm:truncate sm:ml-4 sm:text-right">
                       {data.ownership.ownerEmail}
                     </a>
                   </div>
                 )}
-                <div className="flex justify-between items-center">
-                  <span className="font-mono text-[11px] text-zinc-600 uppercase">Location</span>
-                  <span className="font-mono text-sm text-white">{data.ownership?.country || data.ownership?.organization || "Unknown"}</span>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4">
+                  <span className="font-mono text-[10px] sm:text-[11px] text-zinc-600 uppercase">Location</span>
+                  <span className="font-mono text-xs sm:text-sm text-white sm:text-right">{data.ownership?.country || data.ownership?.organization || "Unknown"}</span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="font-mono text-[11px] text-zinc-600 uppercase">Last Sync</span>
-                  <span className="font-mono text-sm text-zinc-500">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4">
+                  <span className="font-mono text-[10px] sm:text-[11px] text-zinc-600 uppercase">Last Sync</span>
+                  <span className="font-mono text-xs sm:text-sm text-zinc-500 sm:text-right">
                     {data.ownership?.lastUpdated ? new Date(data.ownership.lastUpdated).toLocaleDateString() : "N/A"}
                   </span>
                 </div>
@@ -541,33 +553,33 @@ function ResultsPanel({
             </CardHeader>
             <CardContent className="flex-1 space-y-4">
               <div className="space-y-3">
-                <div className="flex justify-between items-start">
-                  <span className="font-mono text-[11px] text-zinc-600 uppercase mt-0.5">Status</span>
-                  <div className="flex flex-col items-end gap-1">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-1 sm:gap-4">
+                  <span className="font-mono text-[10px] sm:text-[11px] text-zinc-600 uppercase mt-0.5">Status</span>
+                  <div className="flex flex-col items-start sm:items-end gap-1">
                     {data.ownership?.status && data.ownership.status.length > 0 ? (
                       data.ownership.status.map((s, idx) => (
-                        <span key={idx} className="font-mono text-[10px] text-amber-400 uppercase text-right leading-tight">{s}</span>
+                        <span key={idx} className="font-mono text-[9px] sm:text-[10px] text-amber-400 uppercase sm:text-right leading-tight break-all">{s}</span>
                       ))
                     ) : (
-                      <span className="font-mono text-sm text-white">Active</span>
+                      <span className="font-mono text-xs sm:text-sm text-white">Active</span>
                     )}
                   </div>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="font-mono text-[11px] text-zinc-600 uppercase">Created</span>
-                  <span className="font-mono text-sm text-white">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4">
+                  <span className="font-mono text-[10px] sm:text-[11px] text-zinc-600 uppercase">Created</span>
+                  <span className="font-mono text-xs sm:text-sm text-white sm:text-right">
                     {data.ownership?.creationDate ? new Date(data.ownership.creationDate).toLocaleDateString() : "Unknown"}
                   </span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="font-mono text-[11px] text-zinc-600 uppercase">Expires</span>
-                  <span className="font-mono text-sm text-white">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4">
+                  <span className="font-mono text-[10px] sm:text-[11px] text-zinc-600 uppercase">Expires</span>
+                  <span className="font-mono text-xs sm:text-sm text-white sm:text-right">
                     {data.ownership?.expiryDate ? new Date(data.ownership.expiryDate).toLocaleDateString() : "Unknown"}
                   </span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="font-mono text-[11px] text-zinc-600 uppercase">DNSSEC</span>
-                  <span className="font-mono text-sm text-white uppercase">{data.ownership?.dnssec || "Unsigned"}</span>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4">
+                  <span className="font-mono text-[10px] sm:text-[11px] text-zinc-600 uppercase">DNSSEC</span>
+                  <span className="font-mono text-xs sm:text-sm text-white uppercase sm:text-right">{data.ownership?.dnssec || "Unsigned"}</span>
                 </div>
               </div>
             </CardContent>
@@ -583,14 +595,14 @@ function ResultsPanel({
             </CardHeader>
             <CardContent className="flex-1 space-y-4">
               <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="font-mono text-[11px] text-zinc-600 uppercase">Provider</span>
-                  <span className="font-mono text-sm text-white">{data.ownership?.registrarName || "N/A"}</span>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4">
+                  <span className="font-mono text-[10px] sm:text-[11px] text-zinc-600 uppercase">Provider</span>
+                  <span className="font-mono text-xs sm:text-sm text-white sm:text-right break-all">{data.ownership?.registrarName || "N/A"}</span>
                 </div>
                 {data.ownership?.registrarEmail && (
-                  <div className="flex justify-between items-center">
-                    <span className="font-mono text-[11px] text-zinc-600 uppercase">Registrar Email</span>
-                    <a href={`mailto:${data.ownership.registrarEmail}`} className="font-mono text-sm text-blue-400/80 hover:text-blue-300 transition-colors truncate ml-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4">
+                    <span className="font-mono text-[10px] sm:text-[11px] text-zinc-600 uppercase">Registrar Email</span>
+                    <a href={`mailto:${data.ownership.registrarEmail}`} className="font-mono text-xs sm:text-sm text-blue-400/80 hover:text-blue-300 transition-colors break-all sm:truncate sm:ml-4 sm:text-right">
                       {data.ownership.registrarEmail}
                     </a>
                   </div>
@@ -767,7 +779,7 @@ function ResultsPanel({
       </div>
 
       {/* Footer Timestamp */}
-      <div className="flex items-center justify-end gap-2 text-zinc-800 font-mono text-[9px] uppercase tracking-widest pt-4">
+      <div className="flex items-center justify-center sm:justify-end gap-2 text-zinc-800 font-mono text-[9px] uppercase tracking-widest pt-4">
         <Activity className="h-2.5 w-2.5" />
         Analysis generated: {new Date(data.timestamp).toLocaleString()}
       </div>
@@ -872,22 +884,22 @@ export default function TerminalPage() {
       </div>
 
       {/* Terminal Mode Switcher */}
-      <div className="flex p-1 w-full max-w-md bg-zinc-900/50 border border-zinc-800 rounded-xl">
+      <div className="flex p-1 w-full md:max-w-md bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-x-auto no-scrollbar">
         {(["acquisition", "appraisal", "exchange"] as const).map((m) => (
           <button
             key={m}
             onClick={() => setTerminalMode(m)}
             className={cn(
-              "flex-1 flex items-center justify-center gap-2 py-2 rounded-lg font-mono text-[10px] uppercase tracking-wider transition-all",
+              "flex-1 flex items-center justify-center gap-1.5 py-2 sm:py-2.5 px-2 rounded-lg font-mono text-[9px] sm:text-[10px] uppercase tracking-wider transition-all whitespace-nowrap",
               terminalMode === m
                 ? "bg-zinc-800 text-white shadow-sm"
                 : "text-zinc-600 hover:text-zinc-400",
             )}
           >
-            {m === "acquisition" && <ShoppingCart className="h-3 w-3" />}
-            {m === "appraisal" && <TrendingUp className="h-3 w-3" />}
-            {m === "exchange" && <Handshake className="h-3 w-3" />}
-            {m}
+            {m === "acquisition" && <ShoppingCart className="h-3 w-3 shrink-0" />}
+            {m === "appraisal" && <TrendingUp className="h-3 w-3 shrink-0" />}
+            {m === "exchange" && <Handshake className="h-3 w-3 shrink-0" />}
+            <span className={cn(terminalMode === m ? "inline" : "hidden sm:inline")}>{m}</span>
           </button>
         ))}
       </div>
@@ -905,7 +917,7 @@ export default function TerminalPage() {
           )}
         >
           <Search
-            className="ml-4 h-4 w-4 shrink-0 text-zinc-500"
+            className="ml-3 sm:ml-4 h-4 w-4 shrink-0 text-zinc-500"
             strokeWidth={1.5}
           />
           <input
@@ -916,17 +928,17 @@ export default function TerminalPage() {
               setQuery(e.target.value);
               setValidationError(null);
             }}
-            placeholder="quantum.ai, apple.com, nexus.io..."
+            placeholder="quantum.ai, apple.com..."
             disabled={isQuerying}
             autoComplete="off"
             autoFocus
-            className="flex-1 bg-transparent px-4 py-4 font-mono text-sm text-white placeholder-zinc-700 outline-none disabled:opacity-50"
+            className="flex-1 min-w-0 bg-transparent px-2 sm:px-4 py-4 sm:py-5 font-mono text-sm text-white placeholder:text-[10px] sm:placeholder:text-sm placeholder:text-zinc-700 outline-none disabled:opacity-50"
           />
           {query && !isQuerying && (
             <button
               type="button"
               onClick={() => setQuery("")}
-              className="mr-2 text-zinc-600 hover:text-zinc-400"
+              className="mr-1 text-zinc-600 hover:text-zinc-400 shrink-0"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -935,10 +947,15 @@ export default function TerminalPage() {
             id="terminal-search-btn"
             type="submit"
             disabled={isQuerying || !query.trim()}
-            className="m-1.5 h-9 px-5 font-mono text-xs"
+            className="m-1 h-9 sm:h-11 px-2.5 sm:px-6 font-mono text-[10px] sm:text-xs uppercase tracking-widest shrink-0"
           >
-            {isQuerying ? "Analyzing..." : "Analyze"}
-            {!isQuerying && <ChevronRight className="h-3.5 w-3.5" />}
+            {isQuerying ? "..." : (
+              <>
+                <span className="hidden sm:inline">Analyze</span>
+                <span className="sm:hidden">Run</span>
+              </>
+            )}
+            {!isQuerying && <ChevronRight className="h-3 w-3 sm:h-3.5 sm:w-3.5 ml-0.5 sm:ml-1" />}
           </Button>
         </div>
         {validationError && (

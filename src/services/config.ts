@@ -40,8 +40,8 @@ apiClient.interceptors.response.use(
     const data = error.response?.data as any;
     const message = data?.error || data?.message || error.message || 'API request failed';
     
-    // EDGE CASE: Handle Session Expiration (401)
-    if (status === 401 && typeof window !== 'undefined') {
+    // EDGE CASE: Handle Session Expiration (401) or Deleted User (404 on /me)
+    if ((status === 401 || (status === 404 && error.config?.url?.includes('/auth/me'))) && typeof window !== 'undefined') {
       // Don't redirect if we're already trying to log in or on a login page
       const isLoginRequest = error.config?.url?.includes('/auth/login');
       const isLoginPage = window.location.pathname.includes('/login');

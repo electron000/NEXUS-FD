@@ -37,7 +37,7 @@ export function NexusChat({ inquiry, onBack }: NexusChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const { userProfile } = useAppStore();
+  const { userProfile, fetchUnreadMessagesCount } = useAppStore();
   const scrollRef = useRef<HTMLDivElement>(null);
   const socket = getSocket();
 
@@ -48,6 +48,8 @@ export function NexusChat({ inquiry, onBack }: NexusChatProps) {
       if (Array.isArray(data)) {
         const uniqueMap = new Map(data.map((m) => [String(m.id), m]));
         setMessages(Array.from(uniqueMap.values()) as Message[]);
+        // Messages are marked as read on server during this fetch, so sync the store
+        fetchUnreadMessagesCount();
       }
     } catch {
       console.error("Failed to fetch messages");
@@ -79,6 +81,14 @@ export function NexusChat({ inquiry, onBack }: NexusChatProps) {
       setMessages((prev) => {
         const messageMap = new Map(prev.map((m) => [String(m.id), m]));
         messageMap.set(String(msg.id), msg);
+        
+        // If message is incoming, mark as read on server
+        if (String(msg.sender_id) !== String(userProfile?.id)) {
+          apiClient.patch(`/api/inquiries/${inquiry.id}/read`).then(() => {
+            fetchUnreadMessagesCount();
+          }).catch(err => console.warn("Failed to mark as read", err));
+        }
+        
         return Array.from(messageMap.values());
       });
     };
@@ -153,7 +163,7 @@ export function NexusChat({ inquiry, onBack }: NexusChatProps) {
               </h3>
               <p className="font-mono text-[9px] md:text-[10px] text-zinc-500 truncate">
                 With{" "}
-                {isMe(inquiry.sender_id)
+                {inquiry.sender_email === userProfile?.email
                   ? inquiry.receiver_email
                   : inquiry.sender_email}
               </p>

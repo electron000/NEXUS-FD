@@ -26,13 +26,17 @@ export interface AppState {
   // ── UI Preferences ─────────────────────────────────────────────────────────
   sidebarCollapsed: boolean;
   commandPaletteOpen: boolean;
+  unreadMessagesCount: number;
 
   // ── Actions ─────────────────────────────────────────────────────────────────
-  setHasHydrated: (state: boolean) => void; // Added
+  setHasHydrated: (state: boolean) => void;
+  setUnreadMessagesCount: (count: number) => void;
+  fetchUnreadMessagesCount: () => Promise<void>;
   login: (user: UserProfile) => void;
   setAuthFromSession: () => void;
   logout: () => void;
   updateProfile: (updates: Partial<UserProfile>) => void;
+  refreshProfile: (user: any) => void;
 
   addToWatchlist: (domain: string, notes?: string) => void;
   removeFromWatchlist: (domain: string) => void;
@@ -67,24 +71,37 @@ export const useAppStore = create<AppState>()(
       queryHistory: [],
       sidebarCollapsed: false,
       commandPaletteOpen: false,
+      unreadMessagesCount: 0,
 
       // ── Hydration action ───────────────────────────────────────────────────
       setHasHydrated: (state) => set({ _hasHydrated: state }),
+      setUnreadMessagesCount: (count) => set({ unreadMessagesCount: count }),
+      fetchUnreadMessagesCount: async () => {
+        try {
+          const { apiClient } = await import("@/services/config");
+          const res = await apiClient.get("/api/inquiries/unread-count");
+          set({ unreadMessagesCount: (res as any).count || 0 });
+        } catch (err) {
+          console.warn("Failed to fetch unread message count", err);
+        }
+      },
 
       // ── Auth actions ───────────────────────────────────────────────────────
       login: (user) => {
+        const profile = {
+          ...user,
+          avatarInitials: (user.name || user.email || "U")
+            .split(" ")
+            .map((w: string) => w[0])
+            .join("")
+            .slice(0, 2)
+            .toUpperCase(),
+        };
         set({
           isLoggedIn: true,
-          userProfile: {
-            ...user,
-            avatarInitials: (user.name || user.email || "U")
-              .split(" ")
-              .map((w: string) => w[0])
-              .join("")
-              .slice(0, 2)
-              .toUpperCase(),
-          },
+          userProfile: profile,
         });
+        saveUser(profile);
       },
 
       setAuthFromSession: () => {
@@ -126,6 +143,30 @@ export const useAppStore = create<AppState>()(
           }
           return { userProfile: newProfile };
         }),
+
+      refreshProfile: (userData) => {
+        if (!userData) return;
+        
+        // Hardened data extraction: handles nested { user: {...} } or raw user object
+        const user = userData.user || userData;
+        
+        const profile: UserProfile = {
+          ...user,
+          createdAt: user.created_at || user.createdAt, // Handle snake_case from DB
+          avatarInitials: (user.name || user.email || "U")
+            .split(" ")
+            .map((w: string) => w[0])
+            .join("")
+            .slice(0, 2)
+            .toUpperCase(),
+        };
+        
+        set({
+          isLoggedIn: true,
+          userProfile: profile,
+        });
+        saveUser(profile);
+      },
 
       // ... (Watchlist, Terminal, and UI actions remain unchanged)
       addToWatchlist: (domain, notes) => {
@@ -173,7 +214,8 @@ export const useAppStore = create<AppState>()(
       ),
       // Ensure we set hydrated flag after storage is loaded
       onRehydrateStorage: () => (state) => {
-        state?.setHasHydrated(true);
+        // We no longer set hydrated = true here. 
+        // DashboardLayout will set it after a fresh server check.
       },
       partialize: (state) => ({
         isLoggedIn: state.isLoggedIn,

@@ -20,7 +20,7 @@ import {
 import { useAppStore } from "@/store/useAppStore";
 import { cn } from "@/lib/utils";
 import { logoutUser, getCurrentUser } from "@/services/auth";
-import { connectSocket, disconnectSocket } from "@/lib/socket";
+import { connectSocket, disconnectSocket, getSocket } from "@/lib/socket";
 
 const Tooltip = ({ text, children, active = true }: { text: string; children: ReactNode, active?: boolean }) => {
   if (!active) return <>{children}</>;
@@ -78,7 +78,7 @@ function MobileDrawer({
   onClose: () => void;
 }) {
   const pathname = usePathname();
-  const { logout } = useAppStore();
+  const { logout, unreadMessagesCount } = useAppStore();
   const router = useRouter();
 
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -162,13 +162,20 @@ function MobileDrawer({
                       {isActive && (
                         <span className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-0.5 rounded-r-full bg-blue-400" />
                       )}
-                      <Icon
-                        className={cn(
-                          "h-4 w-4 shrink-0",
-                          isActive ? "text-blue-400" : "",
+                      <div className="relative">
+                        <Icon
+                          className={cn(
+                            "h-4 w-4 shrink-0",
+                            isActive ? "text-blue-400" : "",
+                          )}
+                          strokeWidth={isActive ? 2 : 1.5}
+                        />
+                        {item.id === "messages" && unreadMessagesCount > 0 && (
+                          <span className="absolute -top-1.5 -right-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white shadow-lg ring-1 ring-zinc-950">
+                            {unreadMessagesCount > 9 ? "9+" : unreadMessagesCount}
+                          </span>
                         )}
-                        strokeWidth={isActive ? 2 : 1.5}
-                      />
+                      </div>
                       <div className="min-w-0 flex-1">
                         <p
                           className={cn(
@@ -177,8 +184,6 @@ function MobileDrawer({
                           )}
                         >
                           {item.label}
-                        </p>
-                        <p className="font-mono text-[10px] text-zinc-600 mt-0.5 leading-none">
                         </p>
                       </div>
                     </Link>
@@ -260,6 +265,7 @@ function LogoutConfirmModal({
 
 function MobileBottomNav() {
   const pathname = usePathname();
+  const { unreadMessagesCount } = useAppStore();
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-30 flex items-center justify-around border-t border-zinc-800/60 bg-zinc-950/95 backdrop-blur-xl px-2 pb-safe md:hidden">
       {NAV_ITEMS.map((item) => {
@@ -286,10 +292,17 @@ function MobileBottomNav() {
               isActive ? "text-blue-400" : "text-zinc-600 hover:text-zinc-300",
             )}
           >
-            <Icon
-              className="h-5 w-5 shrink-0"
-              strokeWidth={isActive ? 2 : 1.5}
-            />
+            <div className="relative">
+              <Icon
+                className="h-5 w-5 shrink-0"
+                strokeWidth={isActive ? 2 : 1.5}
+              />
+              {item.id === "messages" && unreadMessagesCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white shadow-lg ring-2 ring-zinc-950">
+                  {unreadMessagesCount > 9 ? "9+" : unreadMessagesCount}
+                </span>
+              )}
+            </div>
             <span
               className={cn(
                 "font-mono text-[9px] uppercase tracking-wide truncate",
@@ -310,7 +323,7 @@ function MobileBottomNav() {
 
 function Sidebar() {
   const pathname = usePathname();
-  const { sidebarCollapsed, toggleSidebar, logout } = useAppStore();
+  const { sidebarCollapsed, toggleSidebar, logout, unreadMessagesCount } = useAppStore();
   const router = useRouter();
 
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -402,14 +415,24 @@ function Sidebar() {
                 {isActive && (
                   <span className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-0.5 rounded-r-full bg-blue-400" />
                 )}
-                <Icon
-                  className={cn(
-                    "shrink-0 transition-colors",
-                    sidebarCollapsed ? "h-4.5 w-4.5" : "h-4 w-4",
-                    isActive ? "text-blue-400" : "group-hover:text-zinc-200",
+                <div className="relative">
+                  <Icon
+                    className={cn(
+                      "shrink-0 transition-colors",
+                      sidebarCollapsed ? "h-4.5 w-4.5" : "h-4 w-4",
+                      isActive ? "text-blue-400" : "group-hover:text-zinc-200",
+                    )}
+                    strokeWidth={isActive ? 2 : 1.5}
+                  />
+                  {item.id === "messages" && unreadMessagesCount > 0 && (
+                    <span className={cn(
+                      "absolute flex items-center justify-center rounded-full bg-red-600 text-[9px] font-bold text-white shadow-lg ring-1 ring-zinc-950",
+                      sidebarCollapsed ? "-top-1 -right-1 h-3.5 w-3.5" : "-top-1 -right-1 h-4 w-4"
+                    )}>
+                      {unreadMessagesCount > 99 ? ".." : unreadMessagesCount}
+                    </span>
                   )}
-                  strokeWidth={isActive ? 2 : 1.5}
-                />
+                </div>
                 <AnimatePresence initial={false}>
                   {!sidebarCollapsed && (
                     <motion.div
@@ -417,7 +440,7 @@ function Sidebar() {
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.15 }}
-                      className="min-w-0 flex-1"
+                      className="min-w-0 flex-1 flex items-center justify-between"
                     >
                       <p
                         className={cn(
@@ -510,7 +533,7 @@ function AuthGuard({ children }: { children: ReactNode }) {
 }
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const { login, setHasHydrated, isLoggedIn } = useAppStore();
+  const { login, refreshProfile, setHasHydrated, isLoggedIn, _hasHydrated, logout, fetchUnreadMessagesCount, setUnreadMessagesCount } = useAppStore();
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const pathname = usePathname();
 
@@ -521,45 +544,77 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     if (hasFetched.current) return;
     hasFetched.current = true;
 
-    const authenticateUser = async () => {
+    const initializeDashboard = async () => {
       try {
+        // 1. Force fetch fresh profile data before allowing the app to render
         const res = await getCurrentUser();
-        const userData = (res as any)?.data?.user || (res as any)?.user;
+        
+        // 2. Explicitly extract user data. Our backend /me returns { user: {...} }
+        const userData = (res as any)?.user;
+        
         if (userData) {
-          login(userData as any);
-          connectSocket();
+          refreshProfile(userData);
+          const s = connectSocket();
+          
+          // Initial unread count fetch
+          fetchUnreadMessagesCount();
+
+          // Socket listener for new messages to update counts in real-time
+          const socket = getSocket();
+          socket.off("new_message"); // Prevent duplicates
+          socket.on("new_message", (msg: any) => {
+             // If we're not on the messages page, increment total unread count
+             // Or if we're on the messages page but not in THAT specific chat
+             // For now, simpler is just to re-fetch unread count on every new message
+             fetchUnreadMessagesCount();
+          });
+          
+          // Handle new inquiry notifications too
+          socket.off("new_inquiry");
+          socket.on("new_inquiry", () => {
+            fetchUnreadMessagesCount();
+          });
+        } else {
+          console.warn("User data missing in /me response", res);
         }
       } catch (error: any) {
-        // If we hit a 429 (Too many attempts) or 401,
-        // we just let the AuthGuard handle the redirect.
-        console.warn("Auth check bypassed:", error.message);
+        // If 401 or 404 on /me, the interceptor will handle redirect.
+        // But we should also clear the local state to prevent AuthGuard from flashing the app.
+        if (error.status === 401 || error.status === 404) {
+          logout();
+        }
+        console.error("Initial auth check failed:", error.message);
       } finally {
-        // Critical: Always hydrate so the UI doesn't hang
+        // 3. Signal hydration completion ONLY now.
+        // This releases AuthGuard to either show the app (if logged in) or redirect (if not).
         setHasHydrated(true);
       }
     };
 
-    authenticateUser();
-  }, [login, setHasHydrated]);
+    initializeDashboard();
+  }, [refreshProfile, setHasHydrated]);
 
-  // Refresh profile on navigation to ensure KYC status is synced
+  // Handle subsequent navigation refreshes to keep status in sync
   useEffect(() => {
-    if (!isLoggedIn) return;
+    // Only run if we are actually logged in and hydrated
+    if (!isLoggedIn || !_hasHydrated) return;
 
-    const refreshProfile = async () => {
+    const syncStatus = async () => {
       try {
         const res = await getCurrentUser();
-        const userData = (res as any)?.data?.user || (res as any)?.user;
+        const userData = (res as any)?.user;
         if (userData) {
-          login(userData as any);
+          refreshProfile(userData);
         }
       } catch (e) {
-        console.warn("Profile refresh failed", e);
+        console.warn("Background status sync failed", e);
       }
     };
 
-    refreshProfile();
-  }, [pathname, isLoggedIn, login]);
+    // This effect runs on pathname change. 
+    // initializeDashboard already handles the very first fetch on mount.
+    syncStatus();
+  }, [pathname, isLoggedIn, _hasHydrated, refreshProfile]);
 
   return (
     <AuthGuard>

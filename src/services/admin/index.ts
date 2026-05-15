@@ -23,6 +23,16 @@ export interface PendingKYC {
   created_at: string;
 }
 
+export interface AdminUser {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  is_admin: boolean;
+  kyc_status: 'unverified' | 'pending' | 'verified' | 'rejected';
+  created_at: string;
+}
+
 export async function getAdminStats(): Promise<AdminStats> {
   return apiClient.get('/api/admin/stats');
 }
@@ -33,4 +43,12 @@ export async function getPendingKYCs(): Promise<PendingKYC[]> {
 
 export async function reviewKYC(userId: string, status: 'verified' | 'rejected', reason?: string) {
   return apiClient.post('/api/admin/kyc/review', { userId, status, reason });
+}
+
+export async function getAllUsers(): Promise<AdminUser[]> {
+  return apiClient.get('/api/admin/users');
+}
+
+export async function deleteUser(userId: string): Promise<{ success: boolean; message: string }> {
+  return apiClient.delete(`/api/admin/users/${userId}`);
 }

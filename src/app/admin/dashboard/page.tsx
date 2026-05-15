@@ -15,6 +15,10 @@ import {
   BarChart3,
   ShieldAlert,
   LogOut,
+  Trash2,
+  User as UserIcon,
+  ShieldQuestion,
+  AlertTriangle,
 } from "lucide-react";
 import {
   Card,
@@ -37,8 +41,11 @@ import {
   getAdminStats,
   getPendingKYCs,
   reviewKYC,
+  getAllUsers,
+  deleteUser,
   AdminStats,
   PendingKYC,
+  AdminUser,
 } from "@/services/admin";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
@@ -78,15 +85,23 @@ function AdminDashboard() {
   const router = useRouter();
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [pendingKyc, setPendingKyc] = useState<PendingKYC[]>([]);
+  const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedKyc, setSelectedKyc] = useState<PendingKYC | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [deleteConfirmUser, setDeleteConfirmUser] = useState<AdminUser | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchData = async () => {
     try {
-      const [s, k] = await Promise.all([getAdminStats(), getPendingKYCs()]);
+      const [s, k, u] = await Promise.all([
+        getAdminStats(),
+        getPendingKYCs(),
+        getAllUsers(),
+      ]);
       setStats(s);
       setPendingKyc(k);
+      setUsers(u);
     } catch (err) {
       console.error("Failed to fetch admin data", err);
     } finally {
@@ -135,6 +150,21 @@ function AdminDashboard() {
       setRejectionReason("");
     } catch {
       toast.error("Review action failed");
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    if (isDeleting) return;
+    setIsDeleting(true);
+    try {
+      await deleteUser(userId);
+      toast.success("User removed from platform");
+      fetchData();
+      setDeleteConfirmUser(null);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete user");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -246,66 +276,113 @@ function AdminDashboard() {
           <Table>
             <TableHeader className="bg-black/40">
               <TableRow className="border-zinc-800 hover:bg-transparent">
-                <TableHead className="font-mono text-[10px] uppercase text-zinc-500">
-                  Applicant
-                </TableHead>
-                <TableHead className="font-mono text-[10px] uppercase text-zinc-500">
-                  Legal Name
-                </TableHead>
-                <TableHead className="font-mono text-[10px] uppercase text-zinc-500">
-                  Parents
-                </TableHead>
-                <TableHead className="font-mono text-[10px] uppercase text-zinc-500">
-                  Submission Date
-                </TableHead>
-                <TableHead className="font-mono text-[10px] uppercase text-zinc-500 text-right">
-                  Actions
-                </TableHead>
+                <TableHead className="font-mono text-[10px] uppercase text-zinc-500">Applicant</TableHead>
+                <TableHead className="font-mono text-[10px] uppercase text-zinc-500">Legal Name</TableHead>
+                <TableHead className="font-mono text-[10px] uppercase text-zinc-500">Parents</TableHead>
+                <TableHead className="font-mono text-[10px] uppercase text-zinc-500">Submission Date</TableHead>
+                <TableHead className="font-mono text-[10px] uppercase text-zinc-500 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {pendingKyc.length === 0 ? (
                 <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="h-32 text-center font-mono text-zinc-600 text-xs italic"
-                  >
+                  <TableCell colSpan={5} className="h-32 text-center font-mono text-zinc-600 text-xs italic">
                     Verification queue is currently empty.
                   </TableCell>
                 </TableRow>
               ) : (
                 pendingKyc.map((kyc) => (
-                  <TableRow
-                    key={kyc.id}
-                    className="border-zinc-800 hover:bg-zinc-800/20"
-                  >
+                  <TableRow key={kyc.id} className="border-zinc-800 hover:bg-zinc-800/20">
                     <TableCell className="font-medium">
                       <div className="flex flex-col">
                         <span className="text-sm">{kyc.name}</span>
-                        <span className="text-[10px] font-mono text-zinc-500">
-                          {kyc.email}
-                        </span>
+                        <span className="text-[10px] font-mono text-zinc-500">{kyc.email}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="font-mono text-xs">
-                      {kyc.first_name} {kyc.middle_name} {kyc.last_name}
+                    <TableCell className="font-mono text-xs">{kyc.first_name} {kyc.middle_name} {kyc.last_name}</TableCell>
+                    <TableCell className="font-mono text-[10px] text-zinc-400">F: {kyc.father_name}<br />M: {kyc.mother_name}</TableCell>
+                    <TableCell className="font-mono text-[10px] text-zinc-500">{new Date(kyc.created_at).toLocaleDateString()}</TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="terminal" size="sm" className="h-8 text-[10px]" onClick={() => setSelectedKyc(kyc)}>
+                        <Eye className="h-3.5 w-3.5 mr-1.5" /> Review
+                      </Button>
                     </TableCell>
-                    <TableCell className="font-mono text-[10px] text-zinc-400">
-                      F: {kyc.father_name}
-                      <br />
-                      M: {kyc.mother_name}
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* Users Management Table */}
+      <Card className="bg-zinc-900/50 border-zinc-800 overflow-hidden">
+        <CardHeader className="border-b border-zinc-800 bg-zinc-900/80">
+          <CardTitle className="text-lg flex items-center gap-2 text-blue-400">
+            <Users className="h-5 w-5" />
+            Platform Users
+          </CardTitle>
+          <CardDescription className="font-mono text-[11px]">
+            Manage accounts and verify seller credentials across the ecosystem.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader className="bg-black/40">
+              <TableRow className="border-zinc-800 hover:bg-transparent">
+                <TableHead className="font-mono text-[10px] uppercase text-zinc-500">User / Identity</TableHead>
+                <TableHead className="font-mono text-[10px] uppercase text-zinc-500 text-center">Status Tag</TableHead>
+                <TableHead className="font-mono text-[10px] uppercase text-zinc-500">Joined Date</TableHead>
+                <TableHead className="font-mono text-[10px] uppercase text-zinc-500 text-right">Management</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {users.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="h-32 text-center font-mono text-zinc-600 text-xs italic">
+                    No users found on the platform.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                users.map((user) => (
+                  <TableRow key={user.id} className="border-zinc-800 hover:bg-zinc-800/20">
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-full bg-zinc-800 flex items-center justify-center border border-zinc-700">
+                          <UserIcon className="h-4 w-4 text-zinc-400" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-white">{user.name}</span>
+                          <span className="text-[10px] font-mono text-zinc-500">{user.email}</span>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {user.kyc_status === 'verified' ? (
+                        <Badge className="bg-green-500/10 text-green-400 border-green-500/20 font-mono text-[9px] uppercase">
+                          <ShieldCheck className="h-3 w-3 mr-1" /> Verified Seller
+                        </Badge>
+                      ) : user.kyc_status === 'pending' ? (
+                        <Badge className="bg-yellow-500/10 text-yellow-400 border-yellow-500/20 font-mono text-[9px] uppercase">
+                          <ShieldQuestion className="h-3 w-3 mr-1" /> Unverified Seller
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-zinc-800 text-zinc-400 border-zinc-700 font-mono text-[9px] uppercase">
+                          User
+                        </Badge>
+                      )}
                     </TableCell>
                     <TableCell className="font-mono text-[10px] text-zinc-500">
-                      {new Date(kyc.created_at).toLocaleDateString()}
+                      {new Date(user.created_at).toLocaleDateString()}
                     </TableCell>
                     <TableCell className="text-right">
                       <Button
-                        variant="terminal"
+                        variant="ghost"
                         size="sm"
-                        className="h-8 text-[10px]"
-                        onClick={() => setSelectedKyc(kyc)}
+                        onClick={() => setDeleteConfirmUser(user)}
+                        className="h-8 w-8 p-0 text-zinc-600 hover:text-red-400 hover:bg-red-500/10"
                       >
-                        <Eye className="h-3.5 w-3.5 mr-1.5" /> Review
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -440,6 +517,40 @@ function AdminDashboard() {
                   />
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmUser && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden p-8 text-center border-red-900/30">
+            <div className="h-16 w-16 bg-red-500/10 border border-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <AlertTriangle className="h-8 w-8 text-red-500" />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2 font-mono uppercase tracking-tight">
+              Delete User Account?
+            </h3>
+            <p className="text-zinc-400 text-[11px] font-mono mb-8 uppercase tracking-wider leading-relaxed">
+              This will permanently remove <span className="text-red-400">{deleteConfirmUser.email}</span> and all associated data from the platform. This action is irreversible.
+            </p>
+            <div className="flex gap-4">
+              <Button
+                variant="outline"
+                onClick={() => setDeleteConfirmUser(null)}
+                className="flex-1 border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-900 font-mono text-[10px] uppercase h-11"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => handleDeleteUser(deleteConfirmUser.id)}
+                disabled={isDeleting}
+                className="flex-1 font-mono text-[10px] uppercase h-11 shadow-lg shadow-red-900/20"
+              >
+                {isDeleting ? "Processing..." : "Confirm Deletion"}
+              </Button>
             </div>
           </div>
         </div>

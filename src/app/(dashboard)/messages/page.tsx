@@ -1,11 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Inbox, MessageSquare, ShieldCheck, ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { apiClient } from "@/services/config";
+import { useAppStore } from "@/store/useAppStore";
+import { getSocket } from "@/lib/socket";
 import { NexusChat } from "./NexusChat";
 
 // Matches the interface expected by NexusChat
@@ -18,6 +20,7 @@ interface InquiryDetails {
   offer_price?: number | null;
   status?: string;
   created_at?: string;
+  unread_count?: number;
 }
 
 export default function MessagesPage() {
@@ -26,14 +29,11 @@ export default function MessagesPage() {
     null,
   );
   const [isLoading, setIsLoading] = useState(true);
+  const { userProfile } = useAppStore();
 
-useEffect(() => {
-  const fetchInquiriesList = async () => {
+  const fetchInquiriesList = useCallback(async () => {
     try {
-      // CHANGED: Removed "/user" from the path.
-      // Update this string to exactly match your Go backend's route for listing inquiries.
       const res = await apiClient.get("/api/inquiries");
-
       const data = (res as any)?.data || res;
       if (Array.isArray(data)) {
         setInquiries(data);
@@ -43,10 +43,20 @@ useEffect(() => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  fetchInquiriesList();
-}, []);
+  useEffect(() => {
+    fetchInquiriesList();
+    
+    const socket = getSocket();
+    socket.on("new_message", fetchInquiriesList);
+    socket.on("new_inquiry", fetchInquiriesList);
+    
+    return () => {
+      socket.off("new_message", fetchInquiriesList);
+      socket.off("new_inquiry", fetchInquiriesList);
+    };
+  }, [fetchInquiriesList]);
 
   // If an inquiry is selected, render the chat component instead of the list
   if (selectedInquiry) {
@@ -100,12 +110,21 @@ useEffect(() => {
                     <ShieldCheck className="h-5 w-5 text-blue-400" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="font-mono text-sm font-bold text-white truncate">
-                      {inquiry.domain || "Unknown Domain"}
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-mono text-sm font-bold text-white truncate">
+                        {inquiry.domain || "Unknown Domain"}
+                      </h3>
+                      {Number(inquiry.unread_count) > 0 && (
+                        <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white shadow-lg animate-in zoom-in duration-300">
+                          {inquiry.unread_count}
+                        </span>
+                      )}
+                    </div>
                     <p className="font-mono text-[10px] text-zinc-500 truncate mt-0.5">
                       Counterparty:{" "}
-                      {inquiry.sender_email || inquiry.receiver_email}
+                      {inquiry.sender_email === userProfile?.email
+                        ? inquiry.receiver_email
+                        : inquiry.sender_email}
                     </p>
                   </div>
                 </div>

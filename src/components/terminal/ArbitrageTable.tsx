@@ -210,31 +210,115 @@ export function ArbitrageTable({ data }: ArbitrageTableProps) {
   });
 
   return (
-    <Table>
-      <TableHeader>
-        {table.getHeaderGroups().map((hg) => (
-          <TableRow key={hg.id} className="hover:bg-transparent border-zinc-800/60">
-            {hg.headers.map((header) => (
-              <TableHead key={header.id} className="h-10">
-                {header.isPlaceholder
-                  ? null
-                  : flexRender(header.column.columnDef.header, header.getContext())}
-              </TableHead>
+    <>
+      <div className="hidden md:block">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((hg) => (
+              <TableRow key={hg.id} className="hover:bg-transparent border-zinc-800/60">
+                {hg.headers.map((header) => (
+                  <TableHead key={header.id} className="h-10">
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(header.column.columnDef.header, header.getContext())}
+                  </TableHead>
+                ))}
+              </TableRow>
             ))}
-          </TableRow>
-        ))}
-      </TableHeader>
-      <TableBody>
-        {table.getRowModel().rows.map((row) => (
-          <TableRow key={row.id} className="border-zinc-800/40 hover:bg-zinc-800/20 transition-colors">
-            {row.getVisibleCells().map((cell) => (
-              <TableCell key={cell.id} className="py-3">
-                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-              </TableCell>
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows.map((row) => (
+              <TableRow key={row.id} className="border-zinc-800/40 hover:bg-zinc-800/20 transition-colors">
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id} className="py-3">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
             ))}
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Mobile Arbitrage Cards */}
+      <div className="md:hidden space-y-3">
+        {data.map((item, idx) => {
+          const isCheapestReg = item.registration > 0 && item.registration === minReg && item.available;
+          const isCheapestRenewal = item.renewal === minRenewal && item.available;
+          const currency = item.currency || 'USD';
+          const sym = currency === 'INR' ? '₹' : '$';
+
+          return (
+            <div
+              key={`${item.registrar}-${idx}`}
+              className={cn(
+                "rounded-xl border p-4 transition-all",
+                isCheapestReg ? "border-emerald-500/30 bg-emerald-500/5 shadow-[0_0_15px_rgba(16,185,129,0.05)]" : "border-zinc-800/60 bg-zinc-900/20"
+              )}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <RegistrarBadge name={item.registrar} slug={item.logoSlug} />
+                <div className="flex items-center gap-2">
+                  {item.premium && (
+                    <span className="inline-flex items-center gap-1 rounded-md border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase text-amber-400">
+                      Premium
+                    </span>
+                  )}
+                  {item.available ? (
+                    <span className="flex items-center gap-1 text-emerald-400 font-mono text-[9px] uppercase font-bold"><Check className="h-2.5 w-2.5" /> Available</span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-red-400 font-mono text-[9px] uppercase font-bold"><X className="h-2.5 w-2.5" /> Taken</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-y-4 gap-x-2">
+                <div className="space-y-1">
+                  <p className="font-mono text-[9px] text-zinc-500 uppercase tracking-wider">Registration</p>
+                  <p className={cn("font-mono text-sm font-bold", isCheapestReg ? "text-emerald-400" : "text-white")}>
+                    {item.registration === 0 ? "—" : `${sym}${item.registration.toFixed(2)}`}
+                    {isCheapestReg && <span className="ml-1 text-[8px] text-emerald-500 block leading-none">Best Entry</span>}
+                  </p>
+                </div>
+                <div className="space-y-1 text-right">
+                  <p className="font-mono text-[9px] text-zinc-500 uppercase tracking-wider">Renewal</p>
+                  <p className={cn("font-mono text-sm font-bold", isCheapestRenewal ? "text-emerald-400" : "text-white")}>
+                    {sym}{item.renewal.toFixed(2)}/yr
+                    {isCheapestRenewal && <span className="ml-1 text-[8px] text-emerald-500 block leading-none">Best Renewal</span>}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="font-mono text-[9px] text-zinc-500 uppercase tracking-wider">Privacy</p>
+                  <div className="flex items-center gap-1">
+                    {item.privacy === 0 ? (
+                      <span className="font-mono text-[10px] text-emerald-400 uppercase font-bold tracking-tighter">Included</span>
+                    ) : (
+                      <span className="font-mono text-xs text-zinc-500">{sym}{item.privacy.toFixed(2)}</span>
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-1 text-right">
+                  <p className="font-mono text-[9px] text-zinc-500 uppercase tracking-wider">Transfer</p>
+                  <p className="font-mono text-sm text-zinc-500">
+                    {item.transfer === 0 ? "—" : `${sym}${item.transfer.toFixed(2)}`}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-5">
+                <a
+                  href={item.affiliateUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 w-full rounded-lg bg-blue-600/10 border border-blue-500/20 py-2.5 font-mono text-[10px] text-blue-400 font-bold uppercase tracking-widest hover:bg-blue-600/20 transition-all"
+                >
+                  Visit Registrar <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </>
   );
 }
