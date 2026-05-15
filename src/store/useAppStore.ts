@@ -36,7 +36,7 @@ export interface AppState {
   setAuthFromSession: () => void;
   logout: () => void;
   updateProfile: (updates: Partial<UserProfile>) => void;
-  refreshProfile: (user: any) => void;
+  refreshProfile: (userData: UserProfile | { user: UserProfile } | unknown) => void;
 
   addToWatchlist: (domain: string, notes?: string) => void;
   removeFromWatchlist: (domain: string) => void;
@@ -79,8 +79,10 @@ export const useAppStore = create<AppState>()(
       fetchUnreadMessagesCount: async () => {
         try {
           const { apiClient } = await import("@/services/config");
-          const res = await apiClient.get("/api/inquiries/unread-count");
-          set({ unreadMessagesCount: (res as any).count || 0 });
+          const res = await apiClient.get<{ count: number }>("/api/inquiries/unread-count");
+          // Axios interceptor returns response.data, so we cast to access the property
+          const count = (res as unknown as { count: number }).count;
+          set({ unreadMessagesCount: count || 0 });
         } catch (err) {
           console.warn("Failed to fetch unread message count", err);
         }
@@ -148,18 +150,18 @@ export const useAppStore = create<AppState>()(
         if (!userData) return;
         
         // Hardened data extraction: handles nested { user: {...} } or raw user object
-        const user = userData.user || userData;
+        const u = ((userData as { user?: UserProfile })?.user || userData) as UserProfile & { created_at?: string };
         
         const profile: UserProfile = {
-          ...user,
-          createdAt: user.created_at || user.createdAt, // Handle snake_case from DB
-          avatarInitials: (user.name || user.email || "U")
+          ...u,
+          createdAt: u.created_at || u.createdAt || "",
+          avatarInitials: (u.name || u.email || "U")
             .split(" ")
             .map((w: string) => w[0])
             .join("")
             .slice(0, 2)
             .toUpperCase(),
-        };
+        } as UserProfile;
         
         set({
           isLoggedIn: true,
@@ -213,7 +215,7 @@ export const useAppStore = create<AppState>()(
         typeof window !== "undefined" ? localStorage : ({} as Storage),
       ),
       // Ensure we set hydrated flag after storage is loaded
-      onRehydrateStorage: () => (state) => {
+      onRehydrateStorage: () => () => {
         // We no longer set hydrated = true here. 
         // DashboardLayout will set it after a fresh server check.
       },

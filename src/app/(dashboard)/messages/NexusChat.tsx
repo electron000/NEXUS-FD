@@ -56,7 +56,7 @@ export function NexusChat({ inquiry, onBack }: NexusChatProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [inquiry.id]);
+  }, [inquiry.id, fetchUnreadMessagesCount]);
 
   useEffect(() => {
     // 2. Wrap the fetch call in an async function to satisfy the linter
@@ -98,7 +98,7 @@ export function NexusChat({ inquiry, onBack }: NexusChatProps) {
       socket.off("connect", joinRoom);
       socket.off("new_message", handleNewMessage);
     };
-  }, [inquiry.id, fetchMessages, socket]);
+  }, [inquiry.id, fetchMessages, socket, fetchUnreadMessagesCount, userProfile?.id]);
 
   // WhatsApp-style Auto-scroll: Scroll to bottom when messages change or component loads
   useEffect(() => {

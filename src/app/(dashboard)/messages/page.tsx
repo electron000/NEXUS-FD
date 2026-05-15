@@ -46,7 +46,10 @@ export default function MessagesPage() {
   }, []);
 
   useEffect(() => {
-    fetchInquiriesList();
+    const initialize = async () => {
+      await fetchInquiriesList();
+    };
+    initialize();
     
     const socket = getSocket();
     socket.on("new_message", fetchInquiriesList);

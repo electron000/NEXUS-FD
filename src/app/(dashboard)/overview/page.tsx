@@ -12,25 +12,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PortfolioTable } from "./PortfolioTable";
 
 // ---------------------------------------------------------------------------
-// LiveClock
+// Page
 // ---------------------------------------------------------------------------
-
-function LiveClock() {
-  const [time, setTime] = useState("");
-  useEffect(() => {
-    function tick() {
-      setTime(new Date().toUTCString().split(" ").slice(4).join(" "));
-    }
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, []);
-  return (
-    <span className="font-mono text-[11px] text-zinc-600 tabular-nums">
-      {time}
-    </span>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // MetricCard

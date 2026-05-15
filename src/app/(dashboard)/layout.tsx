@@ -533,7 +533,7 @@ function AuthGuard({ children }: { children: ReactNode }) {
 }
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const { login, refreshProfile, setHasHydrated, isLoggedIn, _hasHydrated, logout, fetchUnreadMessagesCount, setUnreadMessagesCount } = useAppStore();
+  const { refreshProfile, setHasHydrated, isLoggedIn, _hasHydrated, logout, fetchUnreadMessagesCount } = useAppStore();
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const pathname = usePathname();
 
@@ -554,7 +554,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         
         if (userData) {
           refreshProfile(userData);
-          const s = connectSocket();
+          connectSocket();
           
           // Initial unread count fetch
           fetchUnreadMessagesCount();
@@ -562,7 +562,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           // Socket listener for new messages to update counts in real-time
           const socket = getSocket();
           socket.off("new_message"); // Prevent duplicates
-          socket.on("new_message", (msg: any) => {
+          socket.on("new_message", () => {
              // If we're not on the messages page, increment total unread count
              // Or if we're on the messages page but not in THAT specific chat
              // For now, simpler is just to re-fetch unread count on every new message
@@ -592,7 +592,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     };
 
     initializeDashboard();
-  }, [refreshProfile, setHasHydrated]);
+  }, [refreshProfile, setHasHydrated, fetchUnreadMessagesCount, logout]);
 
   // Handle subsequent navigation refreshes to keep status in sync
   useEffect(() => {

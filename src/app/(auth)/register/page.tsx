@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useState, useEffect, useCallback } from "react";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Loader2, UserPlus, CheckCircle2, Mail, ShieldCheck } from "lucide-react";
+import { Loader2, UserPlus, CheckCircle2, ShieldCheck } from "lucide-react";
 import { useAppStore } from "@/store/useAppStore";
 import { signupUser, sendOTP, verifyOTP } from "@/services/auth";
 import { Button } from "@/components/ui/button";
@@ -51,21 +51,45 @@ export default function RegisterPage() {
   const {
     register,
     handleSubmit,
-    watch,
-    setValue,
+    control,
     formState: { errors },
   } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
   });
 
-  const emailValue = watch("email");
+  const emailValue = useWatch({
+    control,
+    name: "email",
+  });
+
+  const handleVerifyOTP = useCallback(async () => {
+    setIsOtpVerifying(true);
+    setError(null);
+
+    try {
+      const result = await verifyOTP(emailValue, otpCode);
+      if (result.success) {
+        setIsEmailVerified(true);
+        setShowOtpInput(false);
+      } else {
+        setError(result.message);
+      }
+    } catch {
+      setError("Verification failed. Please check the code.");
+    } finally {
+      setIsOtpVerifying(false);
+    }
+  }, [emailValue, otpCode]);
 
   // Auto-verify OTP when 6 digits are reached
   useEffect(() => {
     if (otpCode.length === 6 && !isEmailVerified) {
-      handleVerifyOTP();
+      const verify = async () => {
+        await handleVerifyOTP();
+      };
+      verify();
     }
-  }, [otpCode]);
+  }, [otpCode, isEmailVerified, handleVerifyOTP]);
 
   async function handleSendOTP() {
     if (!emailValue || errors.email) {
@@ -83,29 +107,10 @@ export default function RegisterPage() {
       } else {
         setError(result.message);
       }
-    } catch (err) {
+    } catch {
       setError("Failed to send verification code.");
     } finally {
       setIsOtpSending(false);
-    }
-  }
-
-  async function handleVerifyOTP() {
-    setIsOtpVerifying(true);
-    setError(null);
-
-    try {
-      const result = await verifyOTP(emailValue, otpCode);
-      if (result.success) {
-        setIsEmailVerified(true);
-        setShowOtpInput(false);
-      } else {
-        setError(result.message);
-      }
-    } catch (err) {
-      setError("Verification failed. Please check the code.");
-    } finally {
-      setIsOtpVerifying(false);
     }
   }
 

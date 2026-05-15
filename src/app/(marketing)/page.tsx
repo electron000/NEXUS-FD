@@ -18,13 +18,11 @@ import {
   ArrowRight,
   CheckCircle2,
   Search,
-  Bookmark,
   Globe,
   ShieldCheck,
   Zap,
   ShoppingCart,
   Activity,
-  Clock,
 } from "lucide-react";
 import Link from "next/link";
 
