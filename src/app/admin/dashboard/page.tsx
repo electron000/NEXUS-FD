@@ -46,7 +46,7 @@ import { useAppStore } from "@/store/useAppStore";
 import { logoutUser, getCurrentUser } from "@/services/auth";
 import { toast } from "sonner";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 function AdminGuard({ children }: { children: React.ReactNode }) {
   const { isLoggedIn, userProfile } = useAppStore();

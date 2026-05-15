@@ -81,7 +81,7 @@ export interface OwnershipInfo {
 
 export interface AppraisalInfo {
   value: number;
-  tier: 'Premium' | 'Investment' | 'Standard' | 'high' | 'medium' | 'low';
+  tier: 'high' | 'medium' | 'low';
   predictedPrice?: number;
   predictedTier?: string;
 }

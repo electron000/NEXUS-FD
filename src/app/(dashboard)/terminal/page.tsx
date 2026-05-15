@@ -332,7 +332,6 @@ function ResultsPanel({
                 variant="outline"
                 className={cn("font-mono border", tierBorderColor(data.appraisal?.predictedTier))}
               >
-                {data.appraisal?.tier ?? "Standard"} Category
               </Badge>
             </div>
           </CardContent>
